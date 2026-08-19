@@ -1,5 +1,8 @@
 # FacetSmith
 
+[![CI](https://github.com/JesseMillerDev/facet-smith/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/JesseMillerDev/facet-smith/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/JesseMillerDev/facet-smith)](LICENSE)
+
 FacetSmith is a source-native A/B/N experimentation framework for typed React components and Next.js App Router applications.
 
 > **Project status:** v0.1, suitable for local evaluation and early adopters. FacetSmith is the selected project name and the `@facet-smith/*` npm scope is reserved. The packages have not been published.
