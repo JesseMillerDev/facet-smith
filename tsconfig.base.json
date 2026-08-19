@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@facetsmith/core": ["packages/core/src/index.ts"],
+      "@facetsmith/analytics": ["packages/analytics/src/index.ts"],
+      "@facetsmith/react": ["packages/react/src/index.ts"],
+      "@facetsmith/inspector": ["packages/inspector/src/index.tsx"],
+      "@facetsmith/next": ["packages/next/src/index.ts"],
+      "@facetsmith/next/server": ["packages/next/src/server.tsx"],
+      "@facetsmith/next/client": ["packages/next/src/client.tsx"]
+    },
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "useUnknownInCatchVariables": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "jsx": "react-jsx"
+  }
+}

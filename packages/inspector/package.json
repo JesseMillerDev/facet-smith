@@ -1,0 +1,46 @@
+{
+  "name": "@facetsmith/inspector",
+  "version": "0.1.0",
+  "description": "Optional non-production in-app inspector for FacetSmith",
+  "license": "MIT",
+  "author": "Jesse Miller",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JesseMillerDev/facetsmith.git",
+    "directory": "packages/inspector"
+  },
+  "homepage": "https://github.com/JesseMillerDev/facetsmith#readme",
+  "bugs": {
+    "url": "https://github.com/JesseMillerDev/facetsmith/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.tsx --format esm --dts --clean --external react --external react-dom",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@facetsmith/core": "workspace:*",
+    "@facetsmith/react": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18.3.0",
+    "react-dom": ">=18.3.0"
+  },
+  "devDependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

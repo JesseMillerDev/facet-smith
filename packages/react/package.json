@@ -1,0 +1,46 @@
+{
+  "name": "@facetsmith/react",
+  "version": "0.1.0",
+  "description": "Typed React experimentation runtime for FacetSmith",
+  "license": "MIT",
+  "author": "Jesse Miller",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JesseMillerDev/facetsmith.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://github.com/JesseMillerDev/facetsmith#readme",
+  "bugs": {
+    "url": "https://github.com/JesseMillerDev/facetsmith/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean --external react",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@facetsmith/analytics": "workspace:*",
+    "@facetsmith/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18.3.0",
+    "react-dom": ">=18.3.0"
+  },
+  "devDependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

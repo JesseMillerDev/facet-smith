@@ -1,0 +1,37 @@
+{
+  "name": "@facetsmith/analytics",
+  "version": "0.1.0",
+  "description": "Vendor-neutral exposure analytics adapters for FacetSmith",
+  "license": "MIT",
+  "author": "Jesse Miller",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JesseMillerDev/facetsmith.git",
+    "directory": "packages/analytics"
+  },
+  "homepage": "https://github.com/JesseMillerDev/facetsmith#readme",
+  "bugs": {
+    "url": "https://github.com/JesseMillerDev/facetsmith/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@facetsmith/core": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

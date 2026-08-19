@@ -1,0 +1,34 @@
+{
+  "name": "@facetsmith/core",
+  "version": "0.1.0",
+  "description": "Framework-neutral deterministic experiment assignment for FacetSmith",
+  "license": "MIT",
+  "author": "Jesse Miller",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JesseMillerDev/facetsmith.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/JesseMillerDev/facetsmith#readme",
+  "bugs": {
+    "url": "https://github.com/JesseMillerDev/facetsmith/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
