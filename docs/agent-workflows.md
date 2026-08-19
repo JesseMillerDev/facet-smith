@@ -1,5 +1,7 @@
 # Safe agent workflows
 
+Install the versioned repository skill with `npx @facet-smith/cli init`. It writes `.agents/skills/facetsmith/SKILL.md` and refuses to replace local changes unless `--force` is explicit. Commit the installed skill when the repository team wants every compatible coding agent to discover the same FacetSmith guidance.
+
 A coding agent adding a variant must:
 
 1. Inspect the existing component, tests, tokens, and design system.

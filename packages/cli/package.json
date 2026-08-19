@@ -1,0 +1,33 @@
+{
+  "name": "@facet-smith/cli",
+  "version": "0.1.0",
+  "description": "Install FacetSmith agent guidance into a repository",
+  "license": "MIT",
+  "author": "Jesse Miller",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JesseMillerDev/facet-smith.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/JesseMillerDev/facet-smith#readme",
+  "bugs": {
+    "url": "https://github.com/JesseMillerDev/facet-smith/issues"
+  },
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "facetsmith": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsup src/cli.ts --format esm --clean && node scripts/copy-skill.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

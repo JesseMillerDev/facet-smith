@@ -38,6 +38,11 @@ const packages = [
     directory: "packages/inspector",
     archive: "inspector.tgz",
   },
+  {
+    name: "@facet-smith/cli",
+    directory: "packages/cli",
+    archive: "cli.tgz",
+  },
 ];
 const expectedRuntimeExports = {
   "@facet-smith/core": ["defineExperiment", "resolveExperiment", "stableHash"],
@@ -156,6 +161,17 @@ function inspectInstalledPackage(consumerDirectory, spec, workspaceVersions) {
     );
   }
 
+  const binTargets =
+    typeof manifest.bin === "string"
+      ? [manifest.bin]
+      : Object.values(manifest.bin ?? {});
+  for (const target of binTargets) {
+    assert(
+      existsSync(join(packageDirectory, String(target))),
+      `${spec.name} bin target does not exist: ${target}`,
+    );
+  }
+
   for (const dependencyGroup of [
     manifest.dependencies,
     manifest.optionalDependencies,
@@ -249,6 +265,58 @@ try {
   for (const spec of packages) {
     inspectInstalledPackage(consumerDirectory, spec, workspaceVersions);
   }
+
+  const cliDirectory = join(
+    consumerDirectory,
+    "node_modules",
+    "@facet-smith",
+    "cli",
+  );
+  const cliPath = join(cliDirectory, "dist", "cli.js");
+  const packagedSkillPath = join(
+    cliDirectory,
+    "dist",
+    "skill",
+    "facetsmith",
+    "SKILL.md",
+  );
+  assert(
+    readFileSync(cliPath, "utf8").startsWith("#!/usr/bin/env node"),
+    "@facet-smith/cli is missing its executable shebang",
+  );
+  const agentProject = join(temporaryRoot, "agent-project");
+  mkdirSync(agentProject);
+  run(
+    process.execPath,
+    [npmCli, "exec", "--", "facetsmith", "init", "--cwd", agentProject],
+    consumerDirectory,
+  );
+  run(
+    process.execPath,
+    [
+      npmCli,
+      "exec",
+      "--",
+      "facetsmith",
+      "init",
+      "--check",
+      "--cwd",
+      agentProject,
+    ],
+    consumerDirectory,
+  );
+  const installedSkillPath = join(
+    agentProject,
+    ".agents",
+    "skills",
+    "facetsmith",
+    "SKILL.md",
+  );
+  assert(
+    readFileSync(installedSkillPath, "utf8") ===
+      readFileSync(packagedSkillPath, "utf8"),
+    "@facet-smith/cli did not install the packaged skill exactly",
+  );
 
   writeFileSync(
     join(consumerDirectory, "runtime-smoke.mjs"),

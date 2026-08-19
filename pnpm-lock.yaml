@@ -106,6 +106,8 @@ importers:
         specifier: workspace:*
         version: link:../core
 
+  packages/cli: {}
+
   packages/core: {}
 
   packages/inspector:

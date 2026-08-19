@@ -21,6 +21,16 @@ pnpm build
 
 Future consumers would install only the layers they need, such as `@facet-smith/core`, `@facet-smith/react`, and an analytics adapter. The inspector is deliberately separate.
 
+## Agent setup
+
+Install the versioned FacetSmith skill into a consuming repository with:
+
+```bash
+npx @facet-smith/cli init
+```
+
+This writes `.agents/skills/facetsmith/SKILL.md`. Running it again is safe; a locally modified skill is preserved unless `--force` is explicit. Use `npx @facet-smith/cli init --check` in CI to verify that the checked-in skill matches the installed CLI version. The CLI does not use an npm lifecycle script and never modifies application source, dependencies, `AGENTS.md`, or global agent configuration.
+
 ## Five-minute client experiment
 
 ```tsx
@@ -156,6 +166,7 @@ See [analytics.md](docs/analytics.md), including a dependency-free PostHog adapt
 | `@facet-smith/react`     | Provider, typed client factory, registry, visibility exposure      |
 | `@facet-smith/next`      | Server factory, request cookies, validated handler, router refresh |
 | `@facet-smith/inspector` | Optional portal-based non-production overlay and toolbar           |
+| `@facet-smith/cli`       | Explicit repository-scoped agent skill installer                   |
 
 The example is in `examples/next-app`; design notes are in [architecture.md](docs/architecture.md).
 
