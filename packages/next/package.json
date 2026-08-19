@@ -6,12 +6,12 @@
   "author": "Jesse Miller",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JesseMillerDev/facetsmith.git",
+    "url": "git+https://github.com/JesseMillerDev/facet-smith.git",
     "directory": "packages/next"
   },
-  "homepage": "https://github.com/JesseMillerDev/facetsmith#readme",
+  "homepage": "https://github.com/JesseMillerDev/facet-smith#readme",
   "bugs": {
-    "url": "https://github.com/JesseMillerDev/facetsmith/issues"
+    "url": "https://github.com/JesseMillerDev/facet-smith/issues"
   },
   "type": "module",
   "sideEffects": false,
