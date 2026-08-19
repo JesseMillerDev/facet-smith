@@ -21,6 +21,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0 && prettier --check .",
+    "release:check": "corepack pnpm build && node scripts/release-check.mjs",
     "typecheck": "corepack pnpm -r --if-present typecheck",
     "test": "vitest run",
     "test:watch": "vitest",

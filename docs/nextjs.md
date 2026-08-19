@@ -20,7 +20,7 @@ export const POST = createOverrideRouteHandler({
 });
 ```
 
-Mount `<NextExperimentRefresh />` under the provider. When the inspector changes a registered server experiment, the provider posts the validated change, the route writes `__experiment_kit`, and the integration calls `router.refresh()`. The server then resolves and renders the new component. This round trip is intentional; Server Components cannot be switched reliably as client-only state.
+Mount `<NextExperimentRefresh />` under the provider. When the inspector changes a registered server experiment, the provider posts the validated change, the route writes `__facetsmith_overrides`, and the integration calls `router.refresh()`. The server then resolves and renders the new component. This round trip is intentional; Server Components cannot be switched reliably as client-only state.
 
 ## URL and cookie precedence
 
