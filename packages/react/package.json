@@ -1,5 +1,5 @@
 {
-  "name": "@facetsmith/react",
+  "name": "@facet-smith/react",
   "version": "0.1.0",
   "description": "Typed React experimentation runtime for FacetSmith",
   "license": "MIT",
@@ -29,8 +29,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@facetsmith/analytics": "workspace:*",
-    "@facetsmith/core": "workspace:*"
+    "@facet-smith/analytics": "workspace:*",
+    "@facet-smith/core": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18.3.0",

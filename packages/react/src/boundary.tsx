@@ -1,6 +1,6 @@
 "use client";
 
-import type { AssignmentResult } from "@facetsmith/core";
+import type { AssignmentResult } from "@facet-smith/core";
 import {
   useEffect,
   useId,

@@ -1,4 +1,4 @@
-import type { AssignmentSource } from "@facetsmith/core";
+import type { AssignmentSource } from "@facet-smith/core";
 
 export interface ExperimentExposureEvent {
   readonly experimentId: string;

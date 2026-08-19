@@ -1,5 +1,5 @@
 {
-  "name": "@facetsmith/inspector",
+  "name": "@facet-smith/inspector",
   "version": "0.1.0",
   "description": "Optional non-production in-app inspector for FacetSmith",
   "license": "MIT",
@@ -29,8 +29,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@facetsmith/core": "workspace:*",
-    "@facetsmith/react": "workspace:*"
+    "@facet-smith/core": "workspace:*",
+    "@facet-smith/react": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18.3.0",

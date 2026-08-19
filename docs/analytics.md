@@ -15,7 +15,7 @@ Events contain experiment ID, variant ID, revision, assignment source, ISO times
 PostHog remains an application dependency. Adapt an already configured client rather than making it a framework dependency:
 
 ```ts
-import type { ExperimentAnalyticsAdapter } from "@facetsmith/analytics";
+import type { ExperimentAnalyticsAdapter } from "@facet-smith/analytics";
 import posthog from "posthog-js";
 
 export const posthogExperiments: ExperimentAnalyticsAdapter = {

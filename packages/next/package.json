@@ -1,5 +1,5 @@
 {
-  "name": "@facetsmith/next",
+  "name": "@facet-smith/next",
   "version": "0.1.0",
   "description": "Next.js App Router integration for FacetSmith",
   "license": "MIT",
@@ -37,8 +37,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@facetsmith/core": "workspace:*",
-    "@facetsmith/react": "workspace:*"
+    "@facet-smith/core": "workspace:*",
+    "@facet-smith/react": "workspace:*"
   },
   "peerDependencies": {
     "next": ">=16.0.0",

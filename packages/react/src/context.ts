@@ -1,13 +1,13 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { ExperimentExposureEvent } from "@facetsmith/analytics";
+import type { ExperimentExposureEvent } from "@facet-smith/analytics";
 import type {
   AssignmentResult,
   ExperimentDefinition,
   ExperimentOverrides,
   VariantMetadata,
-} from "@facetsmith/core";
+} from "@facet-smith/core";
 import type { RegisteredExperiment } from "./types";
 
 export interface ExperimentRuntime {

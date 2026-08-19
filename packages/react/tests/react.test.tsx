@@ -2,7 +2,7 @@
 import "@testing-library/jest-dom/vitest";
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { InMemoryAnalyticsAdapter } from "@facetsmith/analytics";
+import { InMemoryAnalyticsAdapter } from "@facet-smith/analytics";
 import { ExperimentProvider, createClientExperiment } from "../src";
 
 interface GreetingProps {

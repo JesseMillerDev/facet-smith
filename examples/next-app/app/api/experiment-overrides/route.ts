@@ -1,4 +1,4 @@
-import { createOverrideRouteHandler } from "@facetsmith/next/server";
+import { createOverrideRouteHandler } from "@facet-smith/next/server";
 import { ServerCard } from "../../experiments/server-experiment";
 
 export const POST = createOverrideRouteHandler({

@@ -1,6 +1,6 @@
 # Inspector
 
-`@facetsmith/inspector` is optional, portal-rendered, and disabled by default. It shows fixed-position outlines and badges without changing application layout. `ResizeObserver`, capture-phase scroll events, and resize events update the union of rendered descendant rectangles. Nested markers receive staggered badges and independent outlines.
+`@facet-smith/inspector` is optional, portal-rendered, and disabled by default. It shows fixed-position outlines and badges without changing application layout. `ResizeObserver`, capture-phase scroll events, and resize events update the union of rendered descendant rectangles. Nested markers receive staggered badges and independent outlines.
 
 The toolbar lists mounted experiments, highlights a chosen experiment, toggles outlines, resets overrides, and copies the current URL. Each badge opens an ARIA-labelled dialog with all variant/revision pairs, switch/reset controls, and URL copying. Controls are ordinary keyboard-focusable buttons with visible focus supplied by the overlay and host application; Escape closes the active popover. When inactive, the full-screen portal has `pointer-events: none`, while only controls opt back into pointer interaction.
 

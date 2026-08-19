@@ -62,19 +62,19 @@ importers:
 
   examples/next-app:
     dependencies:
-      '@facetsmith/analytics':
+      '@facet-smith/analytics':
         specifier: workspace:*
         version: link:../../packages/analytics
-      '@facetsmith/core':
+      '@facet-smith/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@facetsmith/inspector':
+      '@facet-smith/inspector':
         specifier: workspace:*
         version: link:../../packages/inspector
-      '@facetsmith/next':
+      '@facet-smith/next':
         specifier: workspace:*
         version: link:../../packages/next
-      '@facetsmith/react':
+      '@facet-smith/react':
         specifier: workspace:*
         version: link:../../packages/react
       next:
@@ -102,7 +102,7 @@ importers:
 
   packages/analytics:
     dependencies:
-      '@facetsmith/core':
+      '@facet-smith/core':
         specifier: workspace:*
         version: link:../core
 
@@ -110,10 +110,10 @@ importers:
 
   packages/inspector:
     dependencies:
-      '@facetsmith/core':
+      '@facet-smith/core':
         specifier: workspace:*
         version: link:../core
-      '@facetsmith/react':
+      '@facet-smith/react':
         specifier: workspace:*
         version: link:../react
     devDependencies:
@@ -126,10 +126,10 @@ importers:
 
   packages/next:
     dependencies:
-      '@facetsmith/core':
+      '@facet-smith/core':
         specifier: workspace:*
         version: link:../core
-      '@facetsmith/react':
+      '@facet-smith/react':
         specifier: workspace:*
         version: link:../react
     devDependencies:
@@ -142,10 +142,10 @@ importers:
 
   packages/react:
     dependencies:
-      '@facetsmith/analytics':
+      '@facet-smith/analytics':
         specifier: workspace:*
         version: link:../analytics
-      '@facetsmith/core':
+      '@facet-smith/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:

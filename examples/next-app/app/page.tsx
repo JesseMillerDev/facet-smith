@@ -1,5 +1,5 @@
-import { parseOverrides } from "@facetsmith/core";
-import { readExperimentRequest } from "@facetsmith/next/server";
+import { parseOverrides } from "@facet-smith/core";
+import { readExperimentRequest } from "@facet-smith/next/server";
 import { ProviderShell } from "./provider-shell";
 import { ServerCard } from "./experiments/server-experiment";
 

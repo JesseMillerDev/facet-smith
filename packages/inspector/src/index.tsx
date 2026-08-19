@@ -1,10 +1,10 @@
 "use client";
 
-import { applyOverridesToUrl } from "@facetsmith/core";
+import { applyOverridesToUrl } from "@facet-smith/core";
 import {
   useExperimentRegistry,
   type RegisteredExperiment,
-} from "@facetsmith/react";
+} from "@facet-smith/react";
 import {
   useCallback,
   useEffect,

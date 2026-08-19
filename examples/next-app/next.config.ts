@@ -3,11 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
   transpilePackages: [
-    "@facetsmith/core",
-    "@facetsmith/analytics",
-    "@facetsmith/react",
-    "@facetsmith/next",
-    "@facetsmith/inspector",
+    "@facet-smith/core",
+    "@facet-smith/analytics",
+    "@facet-smith/react",
+    "@facet-smith/next",
+    "@facet-smith/inspector",
   ],
 };
 

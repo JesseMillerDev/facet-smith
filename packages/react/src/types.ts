@@ -1,13 +1,13 @@
 import type {
   ExperimentAnalyticsAdapter,
   ExperimentExposureEvent,
-} from "@facetsmith/analytics";
+} from "@facet-smith/analytics";
 import type {
   AssignmentResult,
   ExperimentDefinition,
   ExperimentOverrides,
   VariantMetadata,
-} from "@facetsmith/core";
+} from "@facet-smith/core";
 import type { ComponentType, ReactNode } from "react";
 
 export interface ReactVariant<P> extends VariantMetadata {

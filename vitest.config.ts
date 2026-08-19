@@ -6,13 +6,13 @@ const source = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 export default defineConfig({
   resolve: {
     alias: {
-      "@facetsmith/core": source("./packages/core/src/index.ts"),
-      "@facetsmith/analytics": source("./packages/analytics/src/index.ts"),
-      "@facetsmith/react": source("./packages/react/src/index.ts"),
-      "@facetsmith/inspector": source("./packages/inspector/src/index.tsx"),
-      "@facetsmith/next/server": source("./packages/next/src/server.tsx"),
-      "@facetsmith/next/client": source("./packages/next/src/client.tsx"),
-      "@facetsmith/next": source("./packages/next/src/index.ts"),
+      "@facet-smith/core": source("./packages/core/src/index.ts"),
+      "@facet-smith/analytics": source("./packages/analytics/src/index.ts"),
+      "@facet-smith/react": source("./packages/react/src/index.ts"),
+      "@facet-smith/inspector": source("./packages/inspector/src/index.tsx"),
+      "@facet-smith/next/server": source("./packages/next/src/server.tsx"),
+      "@facet-smith/next/client": source("./packages/next/src/client.tsx"),
+      "@facet-smith/next": source("./packages/next/src/index.ts"),
     },
   },
   test: {

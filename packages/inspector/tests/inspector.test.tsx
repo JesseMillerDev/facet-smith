@@ -2,7 +2,7 @@
 import "@testing-library/jest-dom/vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ExperimentProvider, createClientExperiment } from "@facetsmith/react";
+import { ExperimentProvider, createClientExperiment } from "@facet-smith/react";
 import { ExperimentInspector } from "../src";
 
 const Box = createClientExperiment({

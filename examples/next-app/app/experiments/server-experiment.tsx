@@ -1,4 +1,4 @@
-import { createNextExperiment } from "@facetsmith/next/server";
+import { createNextExperiment } from "@facet-smith/next/server";
 
 export interface ServerCardProps {
   readonly release: string;

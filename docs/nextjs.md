@@ -9,7 +9,7 @@ Authenticated applications should skip anonymous generation and pass their own s
 `readExperimentRequest()` returns the subject and parsed reserved override cookie. Define the route beside the application registry:
 
 ```ts
-import { createOverrideRouteHandler } from "@facetsmith/next/server";
+import { createOverrideRouteHandler } from "@facet-smith/next/server";
 import { ServerCard } from "../../experiments/server-card";
 
 export const POST = createOverrideRouteHandler({

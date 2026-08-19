@@ -2,7 +2,7 @@
 
 FacetSmith is a source-native A/B/N experimentation framework for typed React components and Next.js App Router applications.
 
-> **Project status:** v0.1, suitable for local evaluation and early adopters. FacetSmith is the selected project name. The intended `@facetsmith/*` npm scope has not been claimed, and nothing in this repository publishes packages.
+> **Project status:** v0.1, suitable for local evaluation and early adopters. FacetSmith is the selected project name and the `@facet-smith/*` npm scope is reserved. The packages have not been published.
 
 Variants are ordinary reviewable source-code components with immutable identities. FacetSmith validates definitions, assigns a stable variant from an application-provided subject ID, records exposure only when rendered content becomes visible, and optionally exposes a non-production in-app inspector. It does **not** provide statistical analysis, remote flags, authentication, a database, injected markup, telemetry, or a hosted control plane.
 
@@ -16,14 +16,14 @@ pnpm install
 pnpm build
 ```
 
-Future consumers would install only the layers they need, such as `@facetsmith/core`, `@facetsmith/react`, and an analytics adapter. The inspector is deliberately separate.
+Future consumers would install only the layers they need, such as `@facet-smith/core`, `@facet-smith/react`, and an analytics adapter. The inspector is deliberately separate.
 
 ## Five-minute client experiment
 
 ```tsx
 "use client";
 
-import { ExperimentProvider, createExperiment } from "@facetsmith/react";
+import { ExperimentProvider, createExperiment } from "@facet-smith/react";
 
 interface HeroProps {
   title: string;
@@ -61,7 +61,7 @@ Server and client experiments intentionally use different factories. A server ex
 import {
   createNextExperiment,
   readExperimentRequest,
-} from "@facetsmith/next/server";
+} from "@facet-smith/next/server";
 
 export const Hero = createNextExperiment({
   id: "server-hero",
@@ -95,7 +95,7 @@ The inspector is disabled unless explicitly enabled. `environment: "production"`
 const buildEnabled = process.env.NEXT_PUBLIC_EXPERIMENT_INSPECTOR === "true";
 const Inspector = buildEnabled
   ? dynamic(
-      () => import("@facetsmith/inspector").then((m) => m.ExperimentInspector),
+      () => import("@facet-smith/inspector").then((m) => m.ExperimentInspector),
       { ssr: false },
     )
   : undefined;
@@ -119,7 +119,7 @@ The compile-time branch lets a production build omit the optional inspector chun
 Pass any `ExperimentAnalyticsAdapter` to the provider. The runtime emits at most one exposure per experiment/variant/revision in a provider lifetime after `IntersectionObserver` reports visible content. In platforms without `IntersectionObserver`, a rendered DOM descendant emits on mount as the documented compatibility fallback. Assignment by itself never emits.
 
 ```tsx
-import { createConsoleAnalyticsAdapter } from "@facetsmith/analytics";
+import { createConsoleAnalyticsAdapter } from "@facet-smith/analytics";
 
 <ExperimentProvider
   analytics={createConsoleAnalyticsAdapter()}
@@ -146,13 +146,13 @@ See [analytics.md](docs/analytics.md), including a dependency-free PostHog adapt
 
 ## Packages
 
-| Package                 | Responsibility                                                     |
-| ----------------------- | ------------------------------------------------------------------ |
-| `@facetsmith/core`      | Validation, FNV-1a hashing, weighted resolution, override URLs     |
-| `@facetsmith/analytics` | Vendor-neutral exposure event contract and basic adapters          |
-| `@facetsmith/react`     | Provider, typed client factory, registry, visibility exposure      |
-| `@facetsmith/next`      | Server factory, request cookies, validated handler, router refresh |
-| `@facetsmith/inspector` | Optional portal-based non-production overlay and toolbar           |
+| Package                  | Responsibility                                                     |
+| ------------------------ | ------------------------------------------------------------------ |
+| `@facet-smith/core`      | Validation, FNV-1a hashing, weighted resolution, override URLs     |
+| `@facet-smith/analytics` | Vendor-neutral exposure event contract and basic adapters          |
+| `@facet-smith/react`     | Provider, typed client factory, registry, visibility exposure      |
+| `@facet-smith/next`      | Server factory, request cookies, validated handler, router refresh |
+| `@facet-smith/inspector` | Optional portal-based non-production overlay and toolbar           |
 
 The example is in `examples/next-app`; design notes are in [architecture.md](docs/architecture.md).
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { createClientExperiment } from "@facetsmith/react";
+import { createClientExperiment } from "@facet-smith/react";
 
 export interface HeroProps {
   readonly title: string;

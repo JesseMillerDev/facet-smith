@@ -8,8 +8,8 @@ import {
   type ExperimentOverrides,
   type ResolveOptions,
   type VariantMetadata,
-} from "@facetsmith/core";
-import { ExperimentBoundary } from "@facetsmith/react";
+} from "@facet-smith/core";
+import { ExperimentBoundary } from "@facet-smith/react";
 import { cookies, headers } from "next/headers";
 import type { ReactNode } from "react";
 import {

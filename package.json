@@ -17,7 +17,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "build": "corepack pnpm -r --if-present build",
-    "dev": "corepack pnpm -r --filter @facetsmith/next-app^... --if-present build && corepack pnpm --filter @facetsmith/next-app dev",
+    "dev": "corepack pnpm -r --filter @facet-smith/next-app^... --if-present build && corepack pnpm --filter @facet-smith/next-app dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0 && prettier --check .",

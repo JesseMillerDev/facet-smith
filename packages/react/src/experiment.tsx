@@ -6,7 +6,7 @@ import {
   type AssignmentResult,
   type ExperimentDefinition,
   type VariantMetadata,
-} from "@facetsmith/core";
+} from "@facet-smith/core";
 import {
   createElement,
   useMemo,

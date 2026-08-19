@@ -1,5 +1,5 @@
 {
-  "name": "@facetsmith/core",
+  "name": "@facet-smith/core",
   "version": "0.1.0",
   "description": "Framework-neutral deterministic experiment assignment for FacetSmith",
   "license": "MIT",

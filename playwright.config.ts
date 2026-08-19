@@ -15,7 +15,7 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command: "corepack pnpm --filter @facetsmith/next-app dev --port 3100",
+    command: "corepack pnpm --filter @facet-smith/next-app dev --port 3100",
     url: "http://127.0.0.1:3100",
     reuseExistingServer: false,
     timeout: 120_000,

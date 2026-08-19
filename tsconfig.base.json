@@ -6,13 +6,13 @@
     "moduleResolution": "Bundler",
     "baseUrl": ".",
     "paths": {
-      "@facetsmith/core": ["packages/core/src/index.ts"],
-      "@facetsmith/analytics": ["packages/analytics/src/index.ts"],
-      "@facetsmith/react": ["packages/react/src/index.ts"],
-      "@facetsmith/inspector": ["packages/inspector/src/index.tsx"],
-      "@facetsmith/next": ["packages/next/src/index.ts"],
-      "@facetsmith/next/server": ["packages/next/src/server.tsx"],
-      "@facetsmith/next/client": ["packages/next/src/client.tsx"]
+      "@facet-smith/core": ["packages/core/src/index.ts"],
+      "@facet-smith/analytics": ["packages/analytics/src/index.ts"],
+      "@facet-smith/react": ["packages/react/src/index.ts"],
+      "@facet-smith/inspector": ["packages/inspector/src/index.tsx"],
+      "@facet-smith/next": ["packages/next/src/index.ts"],
+      "@facet-smith/next/server": ["packages/next/src/server.tsx"],
+      "@facet-smith/next/client": ["packages/next/src/client.tsx"]
     },
     "strict": true,
     "noUncheckedIndexedAccess": true,

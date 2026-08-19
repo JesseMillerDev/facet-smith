@@ -1,4 +1,4 @@
-import { readExperimentRequest } from "@facetsmith/next/server";
+import { readExperimentRequest } from "@facet-smith/next/server";
 import { ProviderShell } from "../provider-shell";
 import { ServerCard } from "../experiments/server-experiment";
 

@@ -3,10 +3,10 @@
 import {
   createConsoleAnalyticsAdapter,
   type ExperimentExposureEvent,
-} from "@facetsmith/analytics";
-import type { AssignmentResult, ExperimentOverrides } from "@facetsmith/core";
-import { NextExperimentRefresh } from "@facetsmith/next/client";
-import { ExperimentProvider } from "@facetsmith/react";
+} from "@facet-smith/analytics";
+import type { AssignmentResult, ExperimentOverrides } from "@facet-smith/core";
+import { NextExperimentRefresh } from "@facet-smith/next/client";
+import { ExperimentProvider } from "@facet-smith/react";
 import dynamic from "next/dynamic";
 import { useMemo, useState, type ReactNode } from "react";
 import { PricingHero } from "./experiments/client-experiments";
@@ -17,7 +17,7 @@ const inspectorBuildEnabled =
 const Inspector = inspectorBuildEnabled
   ? dynamic(
       () =>
-        import("@facetsmith/inspector").then(
+        import("@facet-smith/inspector").then(
           (module) => module.ExperimentInspector,
         ),
       {

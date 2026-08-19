@@ -1,7 +1,7 @@
 import {
   EXPERIMENT_SUBJECT_COOKIE,
   EXPERIMENT_SUBJECT_HEADER,
-} from "@facetsmith/next";
+} from "@facet-smith/next";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 

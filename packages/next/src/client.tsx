@@ -1,6 +1,6 @@
 "use client";
 
-import { SERVER_REFRESH_EVENT } from "@facetsmith/react";
+import { SERVER_REFRESH_EVENT } from "@facet-smith/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 

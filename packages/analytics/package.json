@@ -1,5 +1,5 @@
 {
-  "name": "@facetsmith/analytics",
+  "name": "@facet-smith/analytics",
   "version": "0.1.0",
   "description": "Vendor-neutral exposure analytics adapters for FacetSmith",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@facetsmith/core": "workspace:*"
+    "@facet-smith/core": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

@@ -10,11 +10,11 @@ import {
   type ExperimentDefinition,
   type ExperimentOverrides,
   type VariantMetadata,
-} from "@facetsmith/core";
+} from "@facet-smith/core";
 import {
   noopAnalyticsAdapter,
   type ExperimentExposureEvent,
-} from "@facetsmith/analytics";
+} from "@facet-smith/analytics";
 import {
   createElement,
   useCallback,
