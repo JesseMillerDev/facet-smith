@@ -1,25 +1,35 @@
 # FacetSmith
 
 [![CI](https://github.com/JesseMillerDev/facet-smith/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/JesseMillerDev/facet-smith/actions/workflows/ci.yml)
+[![npm: core](https://img.shields.io/npm/v/@facet-smith/core?label=npm%20core)](https://www.npmjs.com/package/@facet-smith/core)
+[![npm: CLI](https://img.shields.io/npm/v/@facet-smith/cli?label=npm%20CLI)](https://www.npmjs.com/package/@facet-smith/cli)
 [![License: MIT](https://img.shields.io/github/license/JesseMillerDev/facet-smith)](LICENSE)
 
 FacetSmith is a source-native A/B/N experimentation framework for typed React components and Next.js App Router applications.
 
-> **Project status:** v0.1, suitable for local evaluation and early adopters. FacetSmith is the selected project name and the `@facet-smith/*` npm scope is reserved. The packages have not been published.
+> **Project status:** v0.1, suitable for evaluation and early adopters. The public packages are available from npm under the `@facet-smith/*` scope.
 
 Variants are ordinary reviewable source-code components with immutable identities. FacetSmith validates definitions, assigns a stable variant from an application-provided subject ID, records exposure only when rendered content becomes visible, and optionally exposes a non-production in-app inspector. It does **not** provide statistical analysis, remote flags, authentication, a database, injected markup, telemetry, or a hosted control plane.
 
 ## Install
 
-The workspace packages are not published. In this repository:
+Install the framework-neutral runtime, analytics contracts, and React bindings:
 
 ```bash
-corepack enable
-pnpm install
-pnpm build
+npm install @facet-smith/core @facet-smith/analytics @facet-smith/react
 ```
 
-Future consumers would install only the layers they need, such as `@facet-smith/core`, `@facet-smith/react`, and an analytics adapter. The inspector is deliberately separate.
+For Next.js App Router support, add:
+
+```bash
+npm install @facet-smith/next
+```
+
+The non-production inspector is deliberately separate:
+
+```bash
+npm install @facet-smith/inspector
+```
 
 ## Agent setup
 
