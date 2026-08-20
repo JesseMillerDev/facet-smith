@@ -25,13 +25,18 @@
     "typecheck": "corepack pnpm -r --if-present typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
-    "playwright": "playwright"
+    "playwright": "playwright",
+    "changeset": "changeset",
+    "release:status": "changeset status",
+    "release:version": "changeset version",
+    "release:publish": "corepack pnpm release:check && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "2.31.1",
     "@eslint/js": "9.39.2",
     "@playwright/test": "1.62.1",
-    "@testing-library/jest-dom": "6.9.1",
     "@testing-library/dom": "10.4.1",
+    "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.0",
     "@types/node": "24.10.1",
     "@types/react": "19.2.7",

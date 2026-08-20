@@ -190,10 +190,11 @@ pnpm typecheck
 pnpm test
 pnpm build
 pnpm release:check
+pnpm release:status
 pnpm exec playwright install chromium
 pnpm playwright test
 ```
 
 `pnpm release:check` builds and packs every public package, installs the tarballs into a clean temporary consumer project, and verifies package contents, runtime imports, and TypeScript declarations. It does not publish anything.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [agent-workflows.md](docs/agent-workflows.md). This project uses the [MIT license](LICENSE), has no telemetry, and creates no external resources.
+Package changes use Changesets and independently version each public package. See [CONTRIBUTING.md](CONTRIBUTING.md), [releases.md](docs/releases.md), [SECURITY.md](SECURITY.md), and [agent-workflows.md](docs/agent-workflows.md). This project uses the [MIT license](LICENSE), has no telemetry, and creates no external resources.
