@@ -22,10 +22,15 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./markers": {
+      "types": "./dist/markers.d.ts",
+      "import": "./dist/markers.js",
+      "require": "./dist/markers.cjs"
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean --external react",
+    "build": "tsup src/index.ts --format esm --dts --clean --external react && tsup --config tsup.markers.config.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {

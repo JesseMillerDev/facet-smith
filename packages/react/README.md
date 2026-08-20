@@ -52,7 +52,7 @@ When browser tests need to target an inspected experiment, use the public marker
 import {
   EXPERIMENT_MARKER_ATTRIBUTES,
   experimentMarkerSelector,
-} from "@facet-smith/react";
+} from "@facet-smith/react/markers";
 
 const marker = page.locator(experimentMarkerSelector("pricing-hero"));
 await expect(marker).toHaveAttribute(

@@ -29,7 +29,7 @@ Inspector-enabled experiment boundaries expose stable `data-experiment-id`, `dat
 import {
   EXPERIMENT_MARKER_ATTRIBUTES,
   experimentMarkerSelector,
-} from "@facet-smith/react";
+} from "@facet-smith/react/markers";
 
 const marker = page.locator(experimentMarkerSelector("pricing-hero"));
 await expect(marker).toHaveAttribute(

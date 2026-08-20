@@ -9,6 +9,7 @@
       "@facet-smith/core": ["packages/core/src/index.ts"],
       "@facet-smith/analytics": ["packages/analytics/src/index.ts"],
       "@facet-smith/react": ["packages/react/src/index.ts"],
+      "@facet-smith/react/markers": ["packages/react/src/markers.ts"],
       "@facet-smith/inspector": ["packages/inspector/src/index.tsx"],
       "@facet-smith/next": ["packages/next/src/index.ts"],
       "@facet-smith/next/server": ["packages/next/src/server.tsx"],

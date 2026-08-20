@@ -57,6 +57,10 @@ const expectedRuntimeExports = {
     "createExperiment",
     "experimentMarkerSelector",
   ],
+  "@facet-smith/react/markers": [
+    "EXPERIMENT_MARKER_ATTRIBUTES",
+    "experimentMarkerSelector",
+  ],
   "@facet-smith/next": [
     "EXPERIMENT_OVERRIDE_COOKIE",
     "EXPERIMENT_SUBJECT_COOKIE",
@@ -338,10 +342,24 @@ console.log("Runtime imports passed.");
   run(process.execPath, ["runtime-smoke.mjs"], consumerDirectory);
 
   writeFileSync(
+    join(consumerDirectory, "runtime-smoke.cjs"),
+    `const markers = require("@facet-smith/react/markers");
+
+if (typeof markers.experimentMarkerSelector !== "function") {
+  throw new Error("CommonJS marker helper import failed");
+}
+
+console.log("CommonJS marker import passed.");
+`,
+  );
+  run(process.execPath, ["runtime-smoke.cjs"], consumerDirectory);
+
+  writeFileSync(
     join(consumerDirectory, "type-smoke.ts"),
     `import { defineExperiment, resolveExperiment, stableHash } from "@facet-smith/core";
 import { InMemoryAnalyticsAdapter } from "@facet-smith/analytics";
-import { ExperimentProvider, createClientExperiment, experimentMarkerSelector } from "@facet-smith/react";
+import { ExperimentProvider, createClientExperiment } from "@facet-smith/react";
+import { experimentMarkerSelector } from "@facet-smith/react/markers";
 import { EXPERIMENT_OVERRIDE_COOKIE } from "@facet-smith/next";
 import { createNextExperiment, readExperimentOptions, readExperimentRequest } from "@facet-smith/next/server";
 import { NextExperimentProvider, NextExperimentRefresh } from "@facet-smith/next/client";
