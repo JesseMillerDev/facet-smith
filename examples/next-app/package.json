@@ -11,7 +11,6 @@
   "dependencies": {
     "@facet-smith/analytics": "workspace:*",
     "@facet-smith/core": "workspace:*",
-    "@facet-smith/inspector": "workspace:*",
     "@facet-smith/next": "workspace:*",
     "@facet-smith/react": "workspace:*",
     "next": "16.3.1",
@@ -19,6 +18,7 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@facet-smith/inspector": "workspace:*",
     "@types/node": "24.10.1",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",

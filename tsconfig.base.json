@@ -12,7 +12,8 @@
       "@facet-smith/inspector": ["packages/inspector/src/index.tsx"],
       "@facet-smith/next": ["packages/next/src/index.ts"],
       "@facet-smith/next/server": ["packages/next/src/server.tsx"],
-      "@facet-smith/next/client": ["packages/next/src/client.tsx"]
+      "@facet-smith/next/client": ["packages/next/src/client.tsx"],
+      "@facet-smith/next/proxy": ["packages/next/src/proxy.ts"]
     },
     "strict": true,
     "noUncheckedIndexedAccess": true,

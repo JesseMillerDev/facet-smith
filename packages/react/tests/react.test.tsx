@@ -3,7 +3,12 @@ import "@testing-library/jest-dom/vitest";
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { InMemoryAnalyticsAdapter } from "@facet-smith/analytics";
-import { ExperimentProvider, createClientExperiment } from "../src";
+import {
+  EXPERIMENT_MARKER_ATTRIBUTES,
+  ExperimentProvider,
+  createClientExperiment,
+  experimentMarkerSelector,
+} from "../src";
 
 interface GreetingProps {
   readonly name: string;
@@ -126,5 +131,38 @@ describe("React experiments", () => {
       </ExperimentProvider>,
     );
     expect(screen.getByText("Welcome Ada")).toBeInTheDocument();
+  });
+
+  it("exports stable inspector-only test markers", () => {
+    const { container } = render(
+      <ExperimentProvider
+        subjectId="alice"
+        inspector={{ enabled: true, environment: "test" }}
+      >
+        <Greeting name="Ada" />
+      </ExperimentProvider>,
+    );
+    const marker = container.querySelector(
+      experimentMarkerSelector("greeting"),
+    );
+
+    expect(marker).toHaveAttribute(EXPERIMENT_MARKER_ATTRIBUTES.id, "greeting");
+    expect(marker).toHaveAttribute(
+      EXPERIMENT_MARKER_ATTRIBUTES.variant,
+      "control",
+    );
+    expect(() => experimentMarkerSelector("not valid")).toThrow(TypeError);
+  });
+
+  it("omits inspector markers when the inspector is disabled", () => {
+    const { container } = render(
+      <ExperimentProvider subjectId="alice">
+        <Greeting name="Ada" />
+      </ExperimentProvider>,
+    );
+
+    expect(
+      container.querySelector(experimentMarkerSelector("greeting")),
+    ).toBeNull();
   });
 });

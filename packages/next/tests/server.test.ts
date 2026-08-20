@@ -1,9 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   createNextExperiment,
   createOverrideRouteHandler,
+  readExperimentOptions,
   readExperimentOverrideCookie,
 } from "../src/server";
+
+const nextHeaders = vi.hoisted(() => ({
+  cookies: vi.fn(),
+  headers: vi.fn(),
+}));
+
+vi.mock("next/headers.js", () => nextHeaders);
 
 const definition = {
   id: "server-card",
@@ -36,6 +44,30 @@ describe("Next.js server integration", () => {
     expect(
       readExperimentOverrideCookie({ get: () => ({ value: "%E0%A4%A" }) }),
     ).toEqual({});
+  });
+
+  it("builds resolve options from request and URL state", async () => {
+    nextHeaders.cookies.mockResolvedValue({
+      get: (name: string) =>
+        name === "__facetsmith_overrides"
+          ? { value: "server-card%3Avivid" }
+          : undefined,
+    });
+    nextHeaders.headers.mockResolvedValue(
+      new Headers({ "x-experiment-subject": "subject-123" }),
+    );
+
+    await expect(
+      readExperimentOptions({
+        searchParams: Promise.resolve({
+          __exp: "server-card:plain",
+        }),
+      }),
+    ).resolves.toEqual({
+      subjectId: "subject-123",
+      developerOverrides: { "server-card": "plain" },
+      qaOverrides: { "server-card": "vivid" },
+    });
   });
 
   it("updates and resets validated override cookies", async () => {

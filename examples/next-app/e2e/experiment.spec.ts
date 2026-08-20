@@ -1,4 +1,8 @@
 import { expect, test } from "@playwright/test";
+import {
+  EXPERIMENT_MARKER_ATTRIBUTES,
+  experimentMarkerSelector,
+} from "@facet-smith/react";
 
 test("stable assignment, inspector switching, sharing, reset, and hydration", async ({
   page,
@@ -49,6 +53,9 @@ test("stable assignment, inspector switching, sharing, reset, and hydration", as
   await expect(client).toHaveAttribute("data-variant", clientTarget);
 
   const server = page.getByTestId("server-variant");
+  await expect(
+    page.locator(experimentMarkerSelector("server-card")),
+  ).toHaveAttribute(EXPERIMENT_MARKER_ATTRIBUTES.revision, "1");
   const initialServer = await server.getAttribute("data-variant");
   await page
     .getByRole("button", { name: new RegExp(`server-card · ${initialServer}`) })

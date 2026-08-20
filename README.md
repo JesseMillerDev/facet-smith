@@ -28,7 +28,7 @@ npm install @facet-smith/next
 The non-production inspector is deliberately separate:
 
 ```bash
-npm install @facet-smith/inspector
+npm install --save-dev @facet-smith/inspector
 ```
 
 ## Agent setup
@@ -83,7 +83,7 @@ Server and client experiments intentionally use different factories. A server ex
 // experiments/hero.tsx — Server Component module
 import {
   createNextExperiment,
-  readExperimentRequest,
+  readExperimentOptions,
 } from "@facet-smith/next/server";
 
 export const Hero = createNextExperiment({
@@ -96,19 +96,21 @@ export const Hero = createNextExperiment({
   allocation: { control: 0.5, narrative: 0.5 },
 });
 
-export default async function Page() {
-  const request = await readExperimentRequest();
-  return Hero.render(
-    { title: "Hello" },
-    {
-      subjectId: request.subjectId,
-      qaOverrides: request.overrides,
-    },
-  );
+export default async function Page({ searchParams }) {
+  const options = await readExperimentOptions({ searchParams });
+  return Hero.render({ title: "Hello" }, options);
 }
 ```
 
-See [the Next.js guide](docs/nextjs.md) for the validated route handler, client refresher, anonymous subject cookie, caching implications, and authenticated identity.
+Anonymous assignment is one line in `proxy.ts`:
+
+```ts
+import { createExperimentProxy } from "@facet-smith/next/proxy";
+
+export const proxy = createExperimentProxy();
+```
+
+Wrap the experiment subtree with `NextExperimentProvider` to enable visible-render exposure and server override refresh. See [the Next.js guide](docs/nextjs.md) for an existing-proxy composition example, the validated route handler, caching implications, and authenticated identity.
 
 ## Inspector setup
 

@@ -46,4 +46,21 @@ export function App() {
 
 The runtime distinguishes assignment from actual visible exposure, supports server-provided initial assignments, and safely renders the default without a provider. The optional inspector is a separate package and is not required in production bundles.
 
+When browser tests need to target an inspected experiment, use the public marker helper instead of spelling FacetSmith's DOM attributes yourself:
+
+```ts
+import {
+  EXPERIMENT_MARKER_ATTRIBUTES,
+  experimentMarkerSelector,
+} from "@facet-smith/react";
+
+const marker = page.locator(experimentMarkerSelector("pricing-hero"));
+await expect(marker).toHaveAttribute(
+  EXPERIMENT_MARKER_ATTRIBUTES.variant,
+  "concise",
+);
+```
+
+These markers are emitted only while the inspector is enabled, so they do not add production DOM attributes.
+
 For Next.js Server Components, use [`@facet-smith/next`](https://www.npmjs.com/package/@facet-smith/next) rather than hiding server/client boundaries behind this factory.

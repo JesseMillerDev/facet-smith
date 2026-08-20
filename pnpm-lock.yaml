@@ -71,9 +71,6 @@ importers:
       '@facet-smith/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@facet-smith/inspector':
-        specifier: workspace:*
-        version: link:../../packages/inspector
       '@facet-smith/next':
         specifier: workspace:*
         version: link:../../packages/next
@@ -90,6 +87,9 @@ importers:
         specifier: 19.2.8
         version: 19.2.8(react@19.2.8)
     devDependencies:
+      '@facet-smith/inspector':
+        specifier: workspace:*
+        version: link:../../packages/inspector
       '@types/node':
         specifier: 24.10.1
         version: 24.10.1

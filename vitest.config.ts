@@ -12,6 +12,7 @@ export default defineConfig({
       "@facet-smith/inspector": source("./packages/inspector/src/index.tsx"),
       "@facet-smith/next/server": source("./packages/next/src/server.tsx"),
       "@facet-smith/next/client": source("./packages/next/src/client.tsx"),
+      "@facet-smith/next/proxy": source("./packages/next/src/proxy.ts"),
       "@facet-smith/next": source("./packages/next/src/index.ts"),
     },
   },

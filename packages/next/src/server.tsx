@@ -1,5 +1,6 @@
 import {
   parseOverrides,
+  OVERRIDE_QUERY_PARAMETER,
   resolveExperiment,
   serializeOverrides,
   validateExperiment,
@@ -10,7 +11,7 @@ import {
   type VariantMetadata,
 } from "@facet-smith/core";
 import { ExperimentBoundary } from "@facet-smith/react";
-import { cookies, headers } from "next/headers";
+import { cookies, headers } from "next/headers.js";
 import type { ReactNode } from "react";
 import {
   EXPERIMENT_OVERRIDE_COOKIE,
@@ -105,6 +106,49 @@ export async function readExperimentRequest(): Promise<{
   return {
     ...(subjectId === undefined ? {} : { subjectId }),
     overrides: readExperimentOverrideCookie(cookieStore),
+  };
+}
+
+export type ExperimentSearchParams = Readonly<
+  Record<string, string | readonly string[] | undefined>
+>;
+
+export interface ReadExperimentOptionsInput {
+  readonly searchParams?:
+    | ExperimentSearchParams
+    | URLSearchParams
+    | Promise<ExperimentSearchParams | URLSearchParams>;
+}
+
+export interface ExperimentRequestOptions {
+  readonly subjectId?: string;
+  readonly developerOverrides: ExperimentOverrides;
+  readonly qaOverrides: ExperimentOverrides;
+}
+
+/**
+ * Reads the current anonymous subject, persisted QA overrides, and URL
+ * overrides into the exact options shape accepted by resolve() and render().
+ */
+export async function readExperimentOptions(
+  input: ReadExperimentOptionsInput = {},
+): Promise<ExperimentRequestOptions> {
+  const [request, searchParams] = await Promise.all([
+    readExperimentRequest(),
+    input.searchParams,
+  ]);
+  const rawOverride =
+    searchParams instanceof URLSearchParams
+      ? searchParams.get(OVERRIDE_QUERY_PARAMETER)
+      : searchParams?.[OVERRIDE_QUERY_PARAMETER];
+  return {
+    ...(request.subjectId === undefined
+      ? {}
+      : { subjectId: request.subjectId }),
+    developerOverrides: parseOverrides(
+      typeof rawOverride === "string" ? rawOverride : undefined,
+    ),
+    qaOverrides: request.overrides,
   };
 }
 

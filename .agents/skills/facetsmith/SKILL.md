@@ -12,9 +12,10 @@ Implement experiments as typed, statically imported source components. Preserve 
 - Use `@facet-smith/core` for framework-neutral definitions, deterministic resolution, validation, and override serialization.
 - Use `@facet-smith/analytics` for the exposure event contract and adapters.
 - Use `@facet-smith/react` for client-rendered React experiments and `ExperimentProvider`.
-- Use `@facet-smith/next/server` for Next.js App Router Server Component experiments and request helpers.
-- Use `@facet-smith/next/client` only for the router-refresh bridge after server override changes.
-- Use `@facet-smith/inspector` only as an optional, non-production development dependency.
+- Use `@facet-smith/next/server` for Next.js App Router Server Component experiments and `readExperimentOptions()`.
+- Use `@facet-smith/next/client` for `NextExperimentProvider`, which includes the server-override refresh bridge.
+- Use `@facet-smith/next/proxy` to create or compose stable anonymous subject handling.
+- Use `@facet-smith/inspector` only as an optional, non-production development dependency (`--save-dev`).
 
 Do not add packages the application does not need. Do not introduce a FacetSmith network service, database, remote markup, or runtime code evaluation.
 
@@ -28,7 +29,7 @@ Do not add packages the application does not need. Do not introduce a FacetSmith
 
 ## Resolve identity safely
 
-- Use a stable, opaque application user, account, or long-lived anonymous ID as `subjectId`.
+- Use a stable, opaque application user, account, or long-lived anonymous ID as `subjectId`. In anonymous Next.js applications, prefer `createExperimentProxy()` or `withExperimentSubject()` over hand-rolled cookie/header code.
 - Never use `Math.random()`, an ephemeral render-time ID, an email address, or other analytics-facing personal data for assignment.
 - Pass the same subject and compatible pre-resolved assignment through server rendering and hydration.
 - When no stable subject exists, accept the default variant. Do not invent a client-only assignment that changes hydrated output.
@@ -38,7 +39,7 @@ Do not add packages the application does not need. Do not introduce a FacetSmith
 
 For client React components, define the experiment with `createClientExperiment` or its `createExperiment` alias in a client module and render it beneath `ExperimentProvider`.
 
-For Next.js Server Components, use `createNextExperiment` from `@facet-smith/next/server`. Resolve request identity and QA overrides on the server, await the experiment's `render` result, and keep server/client module boundaries explicit. A server override requires the validated route handler plus `NextExperimentRefresh`; do not simulate the switch with client-only state.
+For Next.js Server Components, use `createNextExperiment` and `readExperimentOptions({ searchParams })` from `@facet-smith/next/server`. Resolve and render with the returned options, then pass the same options and initial assignment to `NextExperimentProvider`. A server override requires the validated route handler; the Next provider already mounts the refresh bridge. Do not simulate the switch with client-only state.
 
 Reading subject or override cookies makes personalized Next.js routes request-time rendered. Never place subject-specific HTML in a shared full-page cache. Cache invariant data outside the personalized boundary.
 
@@ -54,4 +55,4 @@ Load `@facet-smith/inspector` behind a build-time condition so production bundle
 
 ## Complete changes with evidence
 
-Before changing an experiment, inspect its definition, variants, tests, design tokens, analytics adapter, and server/client boundary. State the hypothesis and intended success metric when adding a variant. Afterward, run the repository's type, behavior, accessibility, and supported-viewport checks. Report the exact experiment/variant/revision change and call out any caching, identity, analytics, or production-safety implications.
+Before changing an experiment, inspect its definition, variants, tests, design tokens, analytics adapter, and server/client boundary. State the hypothesis and intended success metric when adding a variant. In inspector-enabled browser tests, use `experimentMarkerSelector()` and `EXPERIMENT_MARKER_ATTRIBUTES` rather than private marker strings. Afterward, run the repository's type, behavior, accessibility, and supported-viewport checks. Report the exact experiment/variant/revision change and call out any caching, identity, analytics, or production-safety implications.

@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useExperimentRuntime } from "./context";
+import { EXPERIMENT_MARKER_ATTRIBUTES } from "./markers";
 
 export interface ExperimentBoundaryProps {
   readonly assignment: AssignmentResult;
@@ -90,9 +91,9 @@ export function ExperimentBoundary({
 
   const metadata = runtime?.inspectorEnabled
     ? {
-        "data-experiment-id": assignment.experimentId,
-        "data-experiment-variant": assignment.variantId,
-        "data-experiment-revision": assignment.variantRevision,
+        [EXPERIMENT_MARKER_ATTRIBUTES.id]: assignment.experimentId,
+        [EXPERIMENT_MARKER_ATTRIBUTES.variant]: assignment.variantId,
+        [EXPERIMENT_MARKER_ATTRIBUTES.revision]: assignment.variantRevision,
       }
     : {};
 

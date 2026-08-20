@@ -55,12 +55,15 @@ const expectedRuntimeExports = {
     "ExperimentProvider",
     "createClientExperiment",
     "createExperiment",
+    "experimentMarkerSelector",
   ],
   "@facet-smith/next": [
     "EXPERIMENT_OVERRIDE_COOKIE",
     "EXPERIMENT_SUBJECT_COOKIE",
     "EXPERIMENT_SUBJECT_HEADER",
   ],
+  "@facet-smith/next/server": ["createNextExperiment", "readExperimentOptions"],
+  "@facet-smith/next/proxy": ["createExperimentProxy", "withExperimentSubject"],
   "@facet-smith/inspector": ["ExperimentInspector"],
 };
 
@@ -338,10 +341,11 @@ console.log("Runtime imports passed.");
     join(consumerDirectory, "type-smoke.ts"),
     `import { defineExperiment, resolveExperiment, stableHash } from "@facet-smith/core";
 import { InMemoryAnalyticsAdapter } from "@facet-smith/analytics";
-import { ExperimentProvider, createClientExperiment } from "@facet-smith/react";
+import { ExperimentProvider, createClientExperiment, experimentMarkerSelector } from "@facet-smith/react";
 import { EXPERIMENT_OVERRIDE_COOKIE } from "@facet-smith/next";
-import { createNextExperiment, readExperimentRequest } from "@facet-smith/next/server";
-import { NextExperimentRefresh } from "@facet-smith/next/client";
+import { createNextExperiment, readExperimentOptions, readExperimentRequest } from "@facet-smith/next/server";
+import { NextExperimentProvider, NextExperimentRefresh } from "@facet-smith/next/client";
+import { createExperimentProxy } from "@facet-smith/next/proxy";
 import { ExperimentInspector } from "@facet-smith/inspector";
 
 void [
@@ -351,10 +355,14 @@ void [
   InMemoryAnalyticsAdapter,
   ExperimentProvider,
   createClientExperiment,
+  experimentMarkerSelector,
   EXPERIMENT_OVERRIDE_COOKIE,
   createNextExperiment,
+  readExperimentOptions,
   readExperimentRequest,
+  NextExperimentProvider,
   NextExperimentRefresh,
+  createExperimentProxy,
   ExperimentInspector,
 ];
 `,
@@ -368,14 +376,22 @@ void [
           module: "NodeNext",
           moduleResolution: "NodeNext",
           noEmit: true,
+          skipLibCheck: true,
           strict: true,
           target: "ES2022",
         },
-        include: ["type-smoke.ts"],
+        include: ["type-smoke.ts", "proxy.ts"],
       },
       null,
       2,
     )}\n`,
+  );
+  writeFileSync(
+    join(consumerDirectory, "proxy.ts"),
+    `import { createExperimentProxy } from "@facet-smith/next/proxy";
+
+export const proxy = createExperimentProxy();
+`,
   );
   run(
     process.execPath,
@@ -403,20 +419,19 @@ export default function Layout({ children }: { children: ReactNode }) {
     `"use client";
 
 import { ExperimentInspector } from "@facet-smith/inspector";
-import { NextExperimentRefresh } from "@facet-smith/next/client";
-import { ExperimentProvider } from "@facet-smith/react";
+import { NextExperimentProvider } from "@facet-smith/next/client";
 
 export function ClientCheck() {
   return (
-    <ExperimentProvider
+    <NextExperimentProvider
       inspector={{
         component: ExperimentInspector,
         enabled: true,
         environment: "release-check",
       }}
     >
-      <NextExperimentRefresh />
-    </ExperimentProvider>
+      <span>FacetSmith ready</span>
+    </NextExperimentProvider>
   );
 }
 `,

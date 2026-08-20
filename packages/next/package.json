@@ -30,10 +30,14 @@
     "./client": {
       "types": "./dist/client.d.ts",
       "import": "./dist/client.js"
+    },
+    "./proxy": {
+      "types": "./dist/proxy.d.ts",
+      "import": "./dist/proxy.js"
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts src/server.tsx src/client.tsx --format esm --dts --clean --external react --external next",
+    "build": "tsup src/index.ts src/server.tsx src/client.tsx src/proxy.ts --format esm --dts --clean --external react --external next",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {

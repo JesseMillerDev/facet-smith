@@ -15,4 +15,29 @@ The toolbar lists mounted experiments, highlights a chosen experiment, toggles o
 
 Use the conditional dynamic import shown in the root README. A production environment disables the inspector even if its URL parameter exists. `allowInProduction: true` is an explicit escape hatch for isolated, access-controlled preview infrastructure; it should never be a normal deployment setting, and the endpoint requires the same explicit opt-in.
 
+Install the inspector as a development dependency so it is present during builds without becoming a production runtime dependency:
+
+```bash
+npm install --save-dev @facet-smith/inspector
+```
+
+## Browser test markers
+
+Inspector-enabled experiment boundaries expose stable `data-experiment-id`, `data-experiment-variant`, and `data-experiment-revision` attributes. Import the public selector and attribute constants instead of copying those strings:
+
+```ts
+import {
+  EXPERIMENT_MARKER_ATTRIBUTES,
+  experimentMarkerSelector,
+} from "@facet-smith/react";
+
+const marker = page.locator(experimentMarkerSelector("pricing-hero"));
+await expect(marker).toHaveAttribute(
+  EXPERIMENT_MARKER_ATTRIBUTES.variant,
+  "concise",
+);
+```
+
+These markers are intentionally absent when the inspector is disabled, keeping production markup free of experiment metadata. Use application-owned semantic locators for production browser tests.
+
 Canvas-only components, content rendered entirely through unrelated portals, and descendants without measurable DOM rectangles may register but cannot be outlined. Their exposure also requires an observable DOM descendant.

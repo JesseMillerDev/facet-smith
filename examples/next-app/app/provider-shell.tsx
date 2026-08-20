@@ -5,8 +5,7 @@ import {
   type ExperimentExposureEvent,
 } from "@facet-smith/analytics";
 import type { AssignmentResult, ExperimentOverrides } from "@facet-smith/core";
-import { NextExperimentRefresh } from "@facet-smith/next/client";
-import { ExperimentProvider } from "@facet-smith/react";
+import { NextExperimentProvider } from "@facet-smith/next/client";
 import dynamic from "next/dynamic";
 import { useMemo, useState, type ReactNode } from "react";
 import { PricingHero } from "./experiments/client-experiments";
@@ -49,7 +48,7 @@ export function ProviderShell({
   const enabled = inspectorBuildEnabled && !forceDisabled;
 
   return (
-    <ExperimentProvider
+    <NextExperimentProvider
       {...(subjectId === undefined ? {} : { subjectId })}
       {...(initialAssignments === undefined ? {} : { initialAssignments })}
       {...(developerOverrides === undefined ? {} : { developerOverrides })}
@@ -63,7 +62,6 @@ export function ProviderShell({
         serverOverrideEndpoint: "/api/experiment-overrides",
       }}
     >
-      <NextExperimentRefresh />
       <main>
         <PricingHero title="Experiment in source" />
         <section className="content-grid" id="demo">
@@ -86,6 +84,6 @@ export function ProviderShell({
           </aside>
         </section>
       </main>
-    </ExperimentProvider>
+    </NextExperimentProvider>
   );
 }
