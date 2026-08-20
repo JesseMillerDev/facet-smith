@@ -47,8 +47,9 @@ exact identity:
 - Allowed action: `npm publish`
 
 The publish job grants `id-token: write`, runs on a GitHub-hosted runner, and
-pins an OIDC-capable npm CLI. Do not add `NPM_TOKEN` or `NODE_AUTH_TOKEN` to the
-job after trusted publishing is configured.
+pins an OIDC-capable npm 11 CLI. npm 12 rejects the legacy `--git-checks` option
+currently passed by Changesets. Do not add `NPM_TOKEN` or `NODE_AUTH_TOKEN` to
+the job after trusted publishing is configured.
 
 ## One-time v0.1.0 bootstrap
 

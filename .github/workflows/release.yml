@@ -60,7 +60,9 @@ jobs:
           node-version: 24
           package-manager-cache: false
       - name: Use an OIDC-capable npm CLI
-        run: npm install --global npm@12.0.2
+        # Changesets currently passes npm's removed --git-checks option.
+        # npm 11 supports trusted publishing and tolerates that option.
+        run: npm install --global npm@11.17.0
       - run: npm --version
       - run: pnpm install --frozen-lockfile
       - name: Publish to npm and create GitHub releases
