@@ -1,7 +1,10 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { ExperimentExposureEvent } from "@facet-smith/analytics";
+import type {
+  ExperimentAttributionSnapshot,
+  ExperimentExposureEvent,
+} from "@facet-smith/analytics";
 import type {
   AssignmentResult,
   ExperimentDefinition,
@@ -17,6 +20,7 @@ export interface ExperimentRuntime {
   readonly initialAssignments: Readonly<Record<string, AssignmentResult>>;
   readonly inspectorEnabled: boolean;
   readonly registrations: readonly RegisteredExperiment[];
+  readonly attribution: ExperimentAttributionSnapshot;
   resolve<TVariants extends Record<string, VariantMetadata>>(
     definition: ExperimentDefinition<TVariants>,
   ): AssignmentResult<keyof TVariants & string>;
@@ -40,4 +44,13 @@ export function useExperimentRegistry(): ExperimentRuntime {
     );
   }
   return runtime;
+}
+
+const EMPTY_ATTRIBUTION: ExperimentAttributionSnapshot = Object.freeze({
+  exposures: Object.freeze([]),
+});
+
+/** Returns experiments that have actually become visible in this provider. */
+export function useExposedExperiments(): ExperimentAttributionSnapshot {
+  return useContext(ExperimentContext)?.attribution ?? EMPTY_ATTRIBUTION;
 }

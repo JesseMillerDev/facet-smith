@@ -14,7 +14,7 @@ Assignment is a pure decision and has no side effects. A rendered experiment pla
 
 ## State ownership
 
-Each provider owns its registry, overrides, and exposure set. There is no process-global registry, so Server Component requests cannot leak identity or assignments. Pre-resolved assignments enter through provider props and are accepted only when both variant and revision match the local definition.
+Each provider owns its registry, overrides, exposure set, and latest visibly exposed attribution per experiment. There is no process-global registry, so Server Component requests cannot leak identity or assignments. Pre-resolved assignments enter through provider props and are accepted only when both variant and revision match the local definition. Applications can read the provider-lifetime attribution snapshot to enrich their existing analytics; FacetSmith does not persist it or intercept application events.
 
 ## Trust boundaries
 

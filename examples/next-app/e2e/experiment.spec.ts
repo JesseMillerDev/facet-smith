@@ -88,3 +88,24 @@ test("disabled inspector is absent", async ({ page }) => {
   await expect(page.getByLabel("FacetSmith toolbar")).toHaveCount(0);
   await expect(page.locator("[data-experiment-inspector]")).toHaveCount(0);
 });
+
+test("existing application events can include visible experiment attribution", async ({
+  page,
+}) => {
+  await page.goto("/disabled");
+  await expect(page.getByTestId("client-variant")).toBeVisible();
+
+  const track = page.getByRole("button", {
+    name: "Track existing app event",
+  });
+  await track.evaluate((element) =>
+    element.scrollIntoView({ block: "center", behavior: "instant" }),
+  );
+  await expect(track).toBeEnabled();
+  await track.click();
+
+  const event = page.getByTestId("attributed-app-event");
+  await expect(event).toContainText("existing_app_event");
+  await expect(event).toContainText("pricing-hero/");
+  await expect(event).toContainText("@1");
+});

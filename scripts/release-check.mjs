@@ -50,12 +50,14 @@ const expectedRuntimeExports = {
     "InMemoryAnalyticsAdapter",
     "createConsoleAnalyticsAdapter",
     "noopAnalyticsAdapter",
+    "toExperimentAttribution",
   ],
   "@facet-smith/react": [
     "ExperimentProvider",
     "createClientExperiment",
     "createExperiment",
     "experimentMarkerSelector",
+    "useExposedExperiments",
   ],
   "@facet-smith/react/markers": [
     "EXPERIMENT_MARKER_ATTRIBUTES",
@@ -357,8 +359,8 @@ console.log("CommonJS marker import passed.");
   writeFileSync(
     join(consumerDirectory, "type-smoke.ts"),
     `import { defineExperiment, resolveExperiment, stableHash } from "@facet-smith/core";
-import { InMemoryAnalyticsAdapter } from "@facet-smith/analytics";
-import { ExperimentProvider, createClientExperiment } from "@facet-smith/react";
+import { InMemoryAnalyticsAdapter, toExperimentAttribution, type ExperimentAttribution } from "@facet-smith/analytics";
+import { ExperimentProvider, createClientExperiment, useExposedExperiments } from "@facet-smith/react";
 import { experimentMarkerSelector } from "@facet-smith/react/markers";
 import { EXPERIMENT_OVERRIDE_COOKIE } from "@facet-smith/next";
 import { createNextExperiment, readExperimentOptions, readExperimentRequest } from "@facet-smith/next/server";
@@ -371,8 +373,10 @@ void [
   resolveExperiment,
   stableHash,
   InMemoryAnalyticsAdapter,
+  toExperimentAttribution,
   ExperimentProvider,
   createClientExperiment,
+  useExposedExperiments,
   experimentMarkerSelector,
   EXPERIMENT_OVERRIDE_COOKIE,
   createNextExperiment,
@@ -383,6 +387,14 @@ void [
   createExperimentProxy,
   ExperimentInspector,
 ];
+
+const attribution: ExperimentAttribution = {
+  experimentId: "release-check",
+  variantId: "control",
+  variantRevision: "1",
+  assignmentSource: "default",
+};
+void attribution;
 `,
   );
   writeFileSync(

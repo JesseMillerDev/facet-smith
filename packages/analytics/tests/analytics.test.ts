@@ -3,6 +3,7 @@ import {
   InMemoryAnalyticsAdapter,
   createConsoleAnalyticsAdapter,
   noopAnalyticsAdapter,
+  toExperimentAttribution,
   type ExperimentExposureEvent,
 } from "../src";
 
@@ -15,6 +16,29 @@ const event: ExperimentExposureEvent = {
 };
 
 describe("analytics adapters", () => {
+  it("creates vendor-neutral attribution from assignments and exposures", () => {
+    expect(
+      toExperimentAttribution({
+        experimentId: "hero",
+        variantId: "control",
+        variantRevision: "1",
+        source: "deterministic",
+        bucket: 0.42,
+      }),
+    ).toEqual({
+      experimentId: "hero",
+      variantId: "control",
+      variantRevision: "1",
+      assignmentSource: "deterministic",
+    });
+    expect(toExperimentAttribution(event)).toEqual({
+      experimentId: "hero",
+      variantId: "control",
+      variantRevision: "1",
+      assignmentSource: "default",
+    });
+  });
+
   it("stores and clears events in memory", () => {
     const adapter = new InMemoryAnalyticsAdapter();
     adapter.exposure(event);

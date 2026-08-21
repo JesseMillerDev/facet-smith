@@ -1,14 +1,36 @@
-import type { AssignmentSource } from "@facet-smith/core";
+import type { AssignmentResult, AssignmentSource } from "@facet-smith/core";
 
-export interface ExperimentExposureEvent {
+/** Immutable experiment identity suitable for attaching to application events. */
+export interface ExperimentAttribution {
   readonly experimentId: string;
   readonly variantId: string;
   readonly variantRevision: string;
-  readonly subjectId?: string;
   readonly assignmentSource: AssignmentSource;
+}
+
+/** The experiments visibly exposed during the current provider lifetime. */
+export interface ExperimentAttributionSnapshot {
+  readonly subjectId?: string;
+  readonly exposures: readonly ExperimentAttribution[];
+}
+
+export interface ExperimentExposureEvent extends ExperimentAttribution {
+  readonly subjectId?: string;
   readonly timestamp: string;
   readonly url?: string;
   readonly context?: Readonly<Record<string, unknown>>;
+}
+
+export function toExperimentAttribution(
+  source: AssignmentResult | ExperimentExposureEvent,
+): ExperimentAttribution {
+  return {
+    experimentId: source.experimentId,
+    variantId: source.variantId,
+    variantRevision: source.variantRevision,
+    assignmentSource:
+      "assignmentSource" in source ? source.assignmentSource : source.source,
+  };
 }
 
 export interface ExperimentAnalyticsAdapter {

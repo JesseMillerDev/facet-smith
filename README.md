@@ -154,6 +154,13 @@ import { createConsoleAnalyticsAdapter } from "@facet-smith/analytics";
 </ExperimentProvider>;
 ```
 
+To attribute the application's existing events, call
+`useExposedExperiments()` once at its analytics boundary and add the returned
+visibility-qualified identities to the normal event properties. FacetSmith
+does not require experiment-specific event names or impose a metric vocabulary.
+Delayed or offline outcomes can instead be joined to exposure events through
+the same stable subject/account identity.
+
 See [analytics.md](docs/analytics.md), including a dependency-free PostHog adapter example.
 
 ## Revision semantics

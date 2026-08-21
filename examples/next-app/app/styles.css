@@ -148,6 +148,35 @@ main {
   margin-bottom: 8px;
   color: #ddd6ef;
 }
+.attribution-demo {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #514b60;
+}
+.attribution-demo h3 {
+  margin: 0;
+}
+.attribution-demo button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 999px;
+  color: #25222e;
+  background: #ffdc75;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.attribution-demo button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.attribution-demo output {
+  display: block;
+  margin-top: 14px;
+  overflow-wrap: anywhere;
+  color: #ddd6ef;
+  font-size: 0.85rem;
+}
 
 @media (max-width: 720px) {
   main {

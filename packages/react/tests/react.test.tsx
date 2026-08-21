@@ -8,6 +8,7 @@ import {
   ExperimentProvider,
   createClientExperiment,
   experimentMarkerSelector,
+  useExposedExperiments,
 } from "../src";
 
 interface GreetingProps {
@@ -32,6 +33,13 @@ const Greeting = createClientExperiment({
 
 let observerCallback: IntersectionObserverCallback;
 const disconnect = vi.fn();
+
+function AttributionProbe() {
+  const attribution = useExposedExperiments();
+  return (
+    <output data-testid="attribution">{JSON.stringify(attribution)}</output>
+  );
+}
 
 beforeEach(() => {
   disconnect.mockClear();
@@ -107,6 +115,113 @@ describe("React experiments", () => {
       );
     });
     expect(analytics.events).toHaveLength(1);
+  });
+
+  it("makes only visibly exposed assignments available for app analytics", () => {
+    const { rerender } = render(
+      <ExperimentProvider subjectId="alice">
+        <Greeting name="Ada" />
+        <AttributionProbe />
+      </ExperimentProvider>,
+    );
+    expect(
+      JSON.parse(screen.getByTestId("attribution").textContent ?? ""),
+    ).toEqual({ subjectId: "alice", exposures: [] });
+
+    act(() => {
+      observerCallback(
+        [
+          {
+            isIntersecting: true,
+            intersectionRatio: 1,
+          } as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      );
+    });
+    expect(
+      JSON.parse(screen.getByTestId("attribution").textContent ?? ""),
+    ).toEqual({
+      subjectId: "alice",
+      exposures: [
+        {
+          experimentId: "greeting",
+          variantId: "control",
+          variantRevision: "1",
+          assignmentSource: "deterministic",
+        },
+      ],
+    });
+
+    rerender(
+      <ExperimentProvider
+        subjectId="alice"
+        developerOverrides={{ greeting: "warm" }}
+      >
+        <Greeting name="Ada" />
+        <AttributionProbe />
+      </ExperimentProvider>,
+    );
+    act(() => {
+      observerCallback(
+        [
+          {
+            isIntersecting: true,
+            intersectionRatio: 1,
+          } as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      );
+    });
+    expect(
+      JSON.parse(screen.getByTestId("attribution").textContent ?? ""),
+    ).toMatchObject({
+      exposures: [
+        {
+          experimentId: "greeting",
+          variantId: "warm",
+          variantRevision: "2",
+          assignmentSource: "developer-override",
+        },
+      ],
+    });
+
+    rerender(
+      <ExperimentProvider
+        subjectId="bob"
+        developerOverrides={{ greeting: "warm" }}
+      >
+        <Greeting name="Ada" />
+        <AttributionProbe />
+      </ExperimentProvider>,
+    );
+    expect(
+      JSON.parse(screen.getByTestId("attribution").textContent ?? ""),
+    ).toEqual({ subjectId: "bob", exposures: [] });
+    act(() => {
+      observerCallback(
+        [
+          {
+            isIntersecting: true,
+            intersectionRatio: 1,
+          } as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      );
+    });
+    expect(
+      JSON.parse(screen.getByTestId("attribution").textContent ?? ""),
+    ).toMatchObject({
+      subjectId: "bob",
+      exposures: [{ experimentId: "greeting", variantId: "warm" }],
+    });
+  });
+
+  it("returns empty attribution without a provider", () => {
+    render(<AttributionProbe />);
+    expect(
+      JSON.parse(screen.getByTestId("attribution").textContent ?? ""),
+    ).toEqual({ exposures: [] });
   });
 
   it("is safe without a provider", () => {

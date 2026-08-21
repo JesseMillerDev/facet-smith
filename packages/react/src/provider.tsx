@@ -13,6 +13,8 @@ import {
 } from "@facet-smith/core";
 import {
   noopAnalyticsAdapter,
+  toExperimentAttribution,
+  type ExperimentAttribution,
   type ExperimentExposureEvent,
 } from "@facet-smith/analytics";
 import {
@@ -31,6 +33,13 @@ export const SERVER_REFRESH_EVENT = "facetsmith:server-refresh";
 const EMPTY_OVERRIDES: ExperimentOverrides = Object.freeze({});
 const EMPTY_ASSIGNMENTS: Readonly<Record<string, AssignmentResult>> =
   Object.freeze({});
+const EMPTY_EXPERIMENT_ATTRIBUTION: readonly ExperimentAttribution[] =
+  Object.freeze([]);
+
+interface ExposedExperimentState {
+  readonly subjectId: string | undefined;
+  readonly exposures: readonly ExperimentAttribution[];
+}
 
 function safeStoredOverrides(): ExperimentOverrides {
   if (typeof window === "undefined") return {};
@@ -81,6 +90,9 @@ export function ExperimentProvider({
     readonly RegisteredExperiment[]
   >([]);
   const exposed = useRef(new Set<string>());
+  const [exposedState, setExposedState] = useState<ExposedExperimentState>(
+    () => ({ subjectId, exposures: EMPTY_EXPERIMENT_ATTRIBUTION }),
+  );
 
   useEffect(() => {
     if (!inspectorEnabled) return;
@@ -246,7 +258,35 @@ export function ExperimentProvider({
 
   const expose = useCallback(
     (event: ExperimentExposureEvent) => {
-      const key = `${event.experimentId}\u0000${event.variantId}\u0000${event.variantRevision}`;
+      const attribution = toExperimentAttribution(event);
+      setExposedState((current) => {
+        const currentExposures =
+          current.subjectId === event.subjectId
+            ? current.exposures
+            : EMPTY_EXPERIMENT_ATTRIBUTION;
+        const existing = currentExposures.find(
+          (item) => item.experimentId === attribution.experimentId,
+        );
+        if (
+          existing?.variantId === attribution.variantId &&
+          existing.variantRevision === attribution.variantRevision &&
+          existing.assignmentSource === attribution.assignmentSource
+        ) {
+          return current;
+        }
+        return {
+          subjectId: event.subjectId,
+          exposures: [
+            ...currentExposures.filter(
+              (item) => item.experimentId !== attribution.experimentId,
+            ),
+            attribution,
+          ].sort((left, right) =>
+            left.experimentId.localeCompare(right.experimentId),
+          ),
+        };
+      });
+      const key = `${event.subjectId ?? ""}\u0000${event.experimentId}\u0000${event.variantId}\u0000${event.variantRevision}`;
       if (exposed.current.has(key)) return;
       exposed.current.add(key);
       const enriched = analyticsContext
@@ -267,6 +307,17 @@ export function ExperimentProvider({
     [analytics, analyticsContext, inspector?.environment, onExposure],
   );
 
+  const attribution = useMemo(
+    () => ({
+      ...(subjectId === undefined ? {} : { subjectId }),
+      exposures:
+        exposedState.subjectId === subjectId
+          ? exposedState.exposures
+          : EMPTY_EXPERIMENT_ATTRIBUTION,
+    }),
+    [exposedState, subjectId],
+  );
+
   const runtime = useMemo<ExperimentRuntime>(
     () => ({
       ...(subjectId === undefined ? {} : { subjectId }),
@@ -275,6 +326,7 @@ export function ExperimentProvider({
       initialAssignments,
       inspectorEnabled,
       registrations,
+      attribution,
       resolve,
       setOverride,
       resetAllOverrides,
@@ -284,6 +336,7 @@ export function ExperimentProvider({
     [
       effectiveOverrides,
       expose,
+      attribution,
       initialAssignments,
       inspectorEnabled,
       qaOverrides,

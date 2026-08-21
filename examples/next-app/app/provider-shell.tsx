@@ -8,6 +8,7 @@ import type { AssignmentResult, ExperimentOverrides } from "@facet-smith/core";
 import { NextExperimentProvider } from "@facet-smith/next/client";
 import dynamic from "next/dynamic";
 import { useMemo, useState, type ReactNode } from "react";
+import { AttributedAnalyticsDemo } from "./attributed-analytics-demo";
 import { PricingHero } from "./experiments/client-experiments";
 
 const inspectorBuildEnabled =
@@ -81,6 +82,7 @@ export function ProviderShell({
                 ))}
               </ol>
             )}
+            <AttributedAnalyticsDemo />
           </aside>
         </section>
       </main>

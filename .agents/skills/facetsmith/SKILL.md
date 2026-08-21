@@ -45,7 +45,7 @@ Reading subject or override cookies makes personalized Next.js routes request-ti
 
 ## Report exposure correctly
 
-Assignment is a pure decision; it is not evidence that a user saw a variant. Send analytics through an `ExperimentAnalyticsAdapter` and preserve FacetSmith's visible-render exposure semantics and provider-lifetime deduplication. The host application remains responsible for consent, transport, retries, conversion definitions, bot policy, sample-ratio checks, and statistical analysis.
+Assignment is a pure decision; it is not evidence that a user saw a variant. Send analytics through an `ExperimentAnalyticsAdapter` and preserve FacetSmith's visible-render exposure semantics and provider-lifetime deduplication. Use `useExposedExperiments()` at an application's analytics boundary to attach visible experiment identities to its existing events; do not invent a FacetSmith-specific event vocabulary or treat unexposed assignments as attribution. The host application remains responsible for consent, transport, retries, conversion definitions, bot policy, sample-ratio checks, and statistical analysis.
 
 Do not infer or declare a winner from exposure events alone.
 
