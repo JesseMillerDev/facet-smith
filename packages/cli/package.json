@@ -1,6 +1,6 @@
 {
   "name": "@facet-smith/cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Install FacetSmith agent guidance into a repository",
   "license": "MIT",
   "author": "Jesse Miller",

@@ -1,17 +1,11 @@
-# @facet-smith/cli
+# @facet-smith/analytics
 
-## 0.1.2
+## 0.2.0
 
-### Patch Changes
+### Minor Changes
 
 - 10e3974: Expose visibility-qualified experiment attribution for existing application
   analytics without imposing event names, transports, persistence, or metric
   semantics. Add neutral attribution types and an assignment helper, the
   `useExposedExperiments()` React hook, documentation, tests, and refreshed agent
   guidance.
-
-## 0.1.1
-
-### Patch Changes
-
-- f07adac: Reduce Next.js setup to composable proxy, request-option, and provider helpers; make published ESM imports work in native-node test runners; and expose supported inspector marker utilities for browser tests.
