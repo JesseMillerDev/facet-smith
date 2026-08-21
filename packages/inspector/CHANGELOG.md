@@ -1,5 +1,12 @@
 # @facet-smith/inspector
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [10e3974]
+  - @facet-smith/react@0.3.0
+
 ## 0.1.2
 
 ### Patch Changes

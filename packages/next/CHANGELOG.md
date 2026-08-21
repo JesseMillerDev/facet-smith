@@ -1,5 +1,12 @@
 # @facet-smith/next
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [10e3974]
+  - @facet-smith/react@0.3.0
+
 ## 0.2.1
 
 ### Patch Changes
