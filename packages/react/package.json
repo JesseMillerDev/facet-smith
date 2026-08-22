@@ -1,6 +1,6 @@
 {
   "name": "@facet-smith/react",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Typed React experimentation runtime for FacetSmith",
   "license": "MIT",
   "author": "Jesse Miller",

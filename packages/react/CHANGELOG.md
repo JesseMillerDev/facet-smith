@@ -1,5 +1,17 @@
 # @facet-smith/react
 
+## 0.4.0
+
+### Minor Changes
+
+- a349f2c: Make experiment iteration part of assignment and exposure identity, enforce safe shared prop contracts, observe multi-root and text-only variants correctly, reject conflicting definitions, and add agent-readable source manifests with stable integrity diagnostics.
+
+### Patch Changes
+
+- Updated dependencies [a349f2c]
+  - @facet-smith/core@0.2.0
+  - @facet-smith/analytics@0.3.0
+
 ## 0.3.0
 
 ### Minor Changes
