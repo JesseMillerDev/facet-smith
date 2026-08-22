@@ -54,6 +54,12 @@ Do not configure a GrowthBook `trackingCallback` on the client used by this adap
 
 The adapter generates one GrowthBook feature key per `(experiment ID, iteration)`. GrowthBook sticky documents use `experimentKey__bucketVersion`; the adapter rejects an experiment rule whose explicit key differs from its generated feature key with `FSGB106`. This prevents a new FacetSmith iteration from inheriting a stale GrowthBook assignment.
 
+### Why each iteration appears separately in GrowthBook
+
+A new FacetSmith iteration is deliberately a new GrowthBook feature and experiment, so it appears as a separate row in the GrowthBook dashboard. For example, `pricing-hero` iterations `launch-1` and `launch-2` use different generated keys and must be configured as two experiments in GrowthBook rather than as two phases of one experiment.
+
+That separation is the integrity boundary. A new iteration means that allocation, salt, eligibility, randomization, resolver behavior, or the vendor-key mapping changed. Combining its results with an earlier iteration would pool observations produced by different assignment semantics and contaminate the analysis. The extra dashboard row makes that boundary visible and prevents sticky assignments and results from leaking across runs.
+
 To enable server sticky storage, pass a GrowthBook `StickyBucketService`. Loading sticky documents makes resolver execution asynchronous, which the Next server factory awaits before rendering:
 
 ```ts

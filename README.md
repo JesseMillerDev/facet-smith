@@ -185,6 +185,8 @@ For GrowthBook, `@facet-smith/growthbook` provides a server-resolved adapter wit
 
 **An iteration is an immutable experimental-run identity.** Changing allocation, salt, eligibility, randomization unit, resolver, or resolver-to-vendor key mapping requires a new iteration. Iteration participates in deterministic bucketing and is carried through assignments, exposures, attribution, hydration, and manifests.
 
+For the reasoning behind the two identities, read [Your A/B test has two versions. You are probably tracking only one.](docs/posts/your-ab-test-has-two-versions.md)
+
 ## Production safety, SSR, and caching
 
 - Use stable authenticated IDs when available; otherwise mint a long-lived anonymous, first-party subject cookie. Never use `Math.random()`.
