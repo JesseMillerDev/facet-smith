@@ -15,6 +15,7 @@ vi.mock("next/headers.js", () => nextHeaders);
 
 const definition = {
   id: "server-card",
+  iteration: "launch-1",
   defaultVariant: "plain",
   variants: {
     plain: { revision: "1", component: () => null },
@@ -29,6 +30,7 @@ describe("Next.js server integration", () => {
     expect(
       experiment.resolve({ qaOverrides: { "server-card": "vivid" } }),
     ).toMatchObject({
+      experimentIteration: "launch-1",
       variantId: "vivid",
       variantRevision: "2",
       source: "qa-override",

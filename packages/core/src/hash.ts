@@ -19,7 +19,9 @@ export function assignmentKey(
   experimentId: string,
   subjectId: string,
   salt = "",
+  iteration = "",
 ): string {
   const frame = (value: string): string => `${value.length}:${value}`;
-  return `${frame(experimentId)}|${frame(subjectId)}|${frame(salt)}`;
+  const legacyKey = `${frame(experimentId)}|${frame(subjectId)}|${frame(salt)}`;
+  return iteration ? `${legacyKey}|${frame(iteration)}` : legacyKey;
 }

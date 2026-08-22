@@ -19,6 +19,8 @@ import {
   EXPERIMENT_SUBJECT_HEADER,
 } from "./constants";
 
+/* eslint-disable no-redeclare -- TypeScript overloads share one implementation. */
+
 export interface NextVariant<P> extends VariantMetadata {
   readonly component: (props: P) => ReactNode | Promise<ReactNode>;
 }
@@ -27,7 +29,7 @@ export type NextExperimentRuntimeOptions = ResolveOptions;
 
 export interface NextExperiment<
   P,
-  TVariants extends Record<string, NextVariant<P>>,
+  TVariants extends Record<string, VariantMetadata>,
 > {
   readonly definition: ExperimentDefinition<TVariants>;
   resolve(
@@ -36,11 +38,43 @@ export interface NextExperiment<
   render(props: P, options?: NextExperimentRuntimeOptions): Promise<ReactNode>;
 }
 
-type NextProps<TVariants extends Record<string, NextVariant<never>>> =
-  Parameters<TVariants[keyof TVariants]["component"]>[0];
+type NextVariantShape = {
+  readonly revision: string;
+  readonly component: (props: never) => ReactNode | Promise<ReactNode>;
+};
+type UnionToIntersection<U> = (
+  U extends unknown ? (value: U) => void : never
+) extends (value: infer I) => void
+  ? I
+  : never;
+type NextProps<TVariants extends Record<string, NextVariantShape>> =
+  UnionToIntersection<Parameters<TVariants[keyof TVariants]["component"]>[0]>;
 
+export function createNextExperiment<P>(): <
+  const TVariants extends Record<string, NextVariant<P>>,
+>(
+  definition: ExperimentDefinition<TVariants>,
+) => NextExperiment<P, TVariants>;
 export function createNextExperiment<
-  const TVariants extends Record<string, NextVariant<never>>,
+  const TVariants extends Record<string, NextVariantShape>,
+>(
+  definition: ExperimentDefinition<TVariants>,
+): NextExperiment<NextProps<TVariants>, TVariants>;
+export function createNextExperiment(
+  definition?: ExperimentDefinition<Record<string, NextVariantShape>>,
+): unknown {
+  if (definition === undefined) {
+    return (
+      explicitDefinition: ExperimentDefinition<
+        Record<string, NextVariantShape>
+      >,
+    ) => buildNextExperiment(explicitDefinition);
+  }
+  return buildNextExperiment(definition);
+}
+
+function buildNextExperiment<
+  const TVariants extends Record<string, NextVariantShape>,
 >(
   definition: ExperimentDefinition<TVariants>,
 ): NextExperiment<NextProps<TVariants>, TVariants> {

@@ -106,6 +106,6 @@ test("existing application events can include visible experiment attribution", a
 
   const event = page.getByTestId("attributed-app-event");
   await expect(event).toContainText("existing_app_event");
-  await expect(event).toContainText("pricing-hero/");
+  await expect(event).toContainText("pricing-hero#launch-1/");
   await expect(event).toContainText("@1");
 });

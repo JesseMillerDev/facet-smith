@@ -7,6 +7,7 @@ import { ExperimentInspector } from "../src";
 
 const Box = createClientExperiment({
   id: "box",
+  iteration: "launch-1",
   defaultVariant: "a",
   variants: {
     a: { component: () => <div>A version</div>, revision: "1" },
@@ -17,6 +18,7 @@ const Box = createClientExperiment({
 
 const Nested = createClientExperiment({
   id: "nested",
+  iteration: "launch-1",
   defaultVariant: "inside",
   variants: {
     inside: { component: () => <div>Nested version</div>, revision: "1" },

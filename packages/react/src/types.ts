@@ -42,6 +42,7 @@ export interface ExperimentProviderProps {
 export interface RegisteredExperiment {
   readonly instanceId: string;
   readonly experimentId: string;
+  readonly experimentIteration: string;
   readonly variantId: string;
   readonly variantRevision: string;
   readonly assignment: AssignmentResult;

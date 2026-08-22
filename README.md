@@ -5,7 +5,7 @@
 [![npm: CLI](https://img.shields.io/npm/v/@facet-smith/cli?label=npm%20CLI)](https://www.npmjs.com/package/@facet-smith/cli)
 [![License: MIT](https://img.shields.io/github/license/JesseMillerDev/facet-smith)](LICENSE)
 
-FacetSmith is a source-native A/B/N experimentation framework for typed React components and Next.js App Router applications.
+FacetSmith is an agent-native, source-native A/B/N experimentation framework for typed React components and Next.js App Router applications. Its integrity interface lets coding agents create and manage many reviewable variants without losing experiment identity, type safety, or exposure correctness.
 
 > **Project status:** v0.1, suitable for evaluation and early adopters. The public packages are available from npm under the `@facet-smith/*` scope.
 
@@ -41,6 +41,15 @@ npx @facet-smith/cli init
 
 This writes `.agents/skills/facetsmith/SKILL.md`. Running it again is safe; a locally modified skill is preserved unless `--force` is explicit. Use `npx @facet-smith/cli init --check` in CI to verify that the checked-in skill matches the installed CLI version. The CLI does not use an npm lifecycle script and never modifies application source, dependencies, `AGENTS.md`, or global agent configuration.
 
+Agents and CI can inspect every static source definition through the same deterministic integrity interface:
+
+```bash
+npx @facet-smith/cli check --json
+npx @facet-smith/cli manifest
+```
+
+Diagnostics have stable codes and source locations. The manifest records experiment, iteration, variant, revision, allocation, and source identity without importing or executing application code.
+
 ## Five-minute client experiment
 
 ```tsx
@@ -54,8 +63,9 @@ interface HeroProps {
 const Control = ({ title }: HeroProps) => <h1>{title}</h1>;
 const Concise = ({ title }: HeroProps) => <h1>{title}, simply.</h1>;
 
-const PricingHero = createExperiment({
+const PricingHero = createExperiment<HeroProps>()({
   id: "pricing-hero",
+  iteration: "launch-1",
   defaultVariant: "control",
   variants: {
     control: { component: Control, revision: "1" },
@@ -88,6 +98,7 @@ import {
 
 export const Hero = createNextExperiment({
   id: "server-hero",
+  iteration: "launch-1",
   defaultVariant: "control",
   variants: {
     control: { revision: "1", component: Control },
@@ -141,7 +152,7 @@ The compile-time branch lets a production build omit the optional inspector chun
 
 ## Analytics
 
-Pass any `ExperimentAnalyticsAdapter` to the provider. The runtime emits at most one exposure per experiment/variant/revision in a provider lifetime after `IntersectionObserver` reports visible content. In platforms without `IntersectionObserver`, a rendered DOM descendant emits on mount as the documented compatibility fallback. Assignment by itself never emits.
+Pass any `ExperimentAnalyticsAdapter` to the provider. The runtime emits at most one exposure per experiment/iteration/variant/revision in a provider lifetime after `IntersectionObserver` reports visible content. In platforms without `IntersectionObserver`, rendered content emits on mount as the documented compatibility fallback. Assignment by itself never emits.
 
 ```tsx
 import { createConsoleAnalyticsAdapter } from "@facet-smith/analytics";
@@ -167,6 +178,8 @@ See [analytics.md](docs/analytics.md), including a dependency-free PostHog adapt
 
 **A revision is an immutable analytics identity.** Once a variant has received traffic, any behavior-bearing implementation change must increment its revision. `pricing-hero / concise / revision 1` and revision 2 are deliberately distinct exposures and must not be silently combined.
 
+**An iteration is an immutable experimental-run identity.** Changing allocation, salt, eligibility, randomization unit, or assignment provider requires a new iteration. Iteration participates in deterministic bucketing and is carried through assignments, exposures, attribution, hydration, and manifests.
+
 ## Production safety, SSR, and caching
 
 - Use stable authenticated IDs when available; otherwise mint a long-lived anonymous, first-party subject cookie. Never use `Math.random()`.
@@ -178,14 +191,14 @@ See [analytics.md](docs/analytics.md), including a dependency-free PostHog adapt
 
 ## Packages
 
-| Package                  | Responsibility                                                     |
-| ------------------------ | ------------------------------------------------------------------ |
-| `@facet-smith/core`      | Validation, FNV-1a hashing, weighted resolution, override URLs     |
-| `@facet-smith/analytics` | Vendor-neutral exposure event contract and basic adapters          |
-| `@facet-smith/react`     | Provider, typed client factory, registry, visibility exposure      |
-| `@facet-smith/next`      | Server factory, request cookies, validated handler, router refresh |
-| `@facet-smith/inspector` | Optional portal-based non-production overlay and toolbar           |
-| `@facet-smith/cli`       | Explicit repository-scoped agent skill installer                   |
+| Package                  | Responsibility                                                      |
+| ------------------------ | ------------------------------------------------------------------- |
+| `@facet-smith/core`      | Validation, FNV-1a hashing, weighted resolution, override URLs      |
+| `@facet-smith/analytics` | Vendor-neutral exposure event contract and basic adapters           |
+| `@facet-smith/react`     | Provider, typed client factory, registry, visibility exposure       |
+| `@facet-smith/next`      | Server factory, request cookies, validated handler, router refresh  |
+| `@facet-smith/inspector` | Optional portal-based non-production overlay and toolbar            |
+| `@facet-smith/cli`       | Agent skill, source manifest, and machine-readable integrity checks |
 
 The example is in `examples/next-app`; design notes are in [architecture.md](docs/architecture.md).
 

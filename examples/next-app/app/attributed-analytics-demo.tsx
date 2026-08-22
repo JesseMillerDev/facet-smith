@@ -45,7 +45,7 @@ export function AttributedAnalyticsDemo() {
           ? `${lastEvent.name}: ${lastEvent.experimentAttribution
               .map(
                 (item) =>
-                  `${item.experimentId}/${item.variantId}@${item.variantRevision}`,
+                  `${item.experimentId}#${item.experimentIteration}/${item.variantId}@${item.variantRevision}`,
               )
               .join(", ")}`
           : "No application event tracked yet."}

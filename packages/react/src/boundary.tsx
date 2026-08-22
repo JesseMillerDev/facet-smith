@@ -18,6 +18,17 @@ export interface ExperimentBoundaryProps {
   readonly children: ReactNode;
 }
 
+function hasDirectText(marker: HTMLElement): boolean {
+  return Array.from(marker.childNodes).some(
+    (node) =>
+      node.nodeType === Node.TEXT_NODE && Boolean(node.textContent?.trim()),
+  );
+}
+
+function hasRenderedContent(marker: HTMLElement): boolean {
+  return marker.children.length > 0 || hasDirectText(marker);
+}
+
 export function ExperimentBoundary({
   assignment,
   variants,
@@ -37,6 +48,7 @@ export function ExperimentBoundary({
     return register({
       instanceId,
       experimentId: assignment.experimentId,
+      experimentIteration: assignment.experimentIteration,
       variantId: assignment.variantId,
       variantRevision: assignment.variantRevision,
       assignment,
@@ -56,11 +68,13 @@ export function ExperimentBoundary({
   useEffect(() => {
     const marker = markerRef.current;
     if (!expose || !marker) return;
-    const target = marker.querySelector<HTMLElement>("*");
-    if (!target) return;
-    const emit = () =>
+    let emitted = false;
+    const emit = () => {
+      if (emitted) return;
+      emitted = true;
       expose({
         experimentId: assignment.experimentId,
+        experimentIteration: assignment.experimentIteration,
         variantId: assignment.variantId,
         variantRevision: assignment.variantRevision,
         ...(subjectId === undefined ? {} : { subjectId }),
@@ -68,25 +82,83 @@ export function ExperimentBoundary({
         timestamp: new Date().toISOString(),
         ...(typeof window === "undefined" ? {} : { url: window.location.href }),
       });
+    };
     if (typeof IntersectionObserver === "undefined") {
-      emit();
-      return;
+      let fallbackObserver: MutationObserver | undefined;
+      const emitWhenRendered = () => {
+        if (!hasRenderedContent(marker)) return;
+        emit();
+        fallbackObserver?.disconnect();
+      };
+      emitWhenRendered();
+      if (emitted || typeof MutationObserver === "undefined") return;
+      fallbackObserver = new MutationObserver(emitWhenRendered);
+      fallbackObserver.observe(marker, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+      });
+      return () => fallbackObserver?.disconnect();
     }
+    const observed = new Set<Element>();
+    let textSentinel: HTMLSpanElement | undefined;
     const observer = new IntersectionObserver(
       (entries) => {
         if (
           entries.some(
-            (entry) => entry.isIntersecting && entry.intersectionRatio > 0,
+            (entry) =>
+              observed.has(entry.target) &&
+              entry.isIntersecting &&
+              entry.intersectionRatio > 0,
           )
         ) {
           emit();
           observer.disconnect();
+          mutationObserver?.disconnect();
         }
       },
       { threshold: 0.01 },
     );
-    observer.observe(target);
-    return () => observer.disconnect();
+    const observeTopLevelElements = () => {
+      if (!hasDirectText(marker) && textSentinel) {
+        observer.unobserve(textSentinel);
+        observed.delete(textSentinel);
+        textSentinel.remove();
+        textSentinel = undefined;
+      }
+      if (hasDirectText(marker) && !textSentinel) {
+        textSentinel = document.createElement("span");
+        textSentinel.ariaHidden = "true";
+        Object.assign(textSentinel.style, {
+          position: "absolute",
+          width: "1px",
+          height: "1px",
+          pointerEvents: "none",
+          opacity: "0",
+        });
+        marker.prepend(textSentinel);
+      }
+      for (const target of Array.from(marker.children)) {
+        if (observed.has(target)) continue;
+        observed.add(target);
+        observer.observe(target);
+      }
+    };
+    const mutationObserver =
+      typeof MutationObserver === "undefined"
+        ? undefined
+        : new MutationObserver(observeTopLevelElements);
+    observeTopLevelElements();
+    mutationObserver?.observe(marker, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+    return () => {
+      observer.disconnect();
+      mutationObserver?.disconnect();
+      textSentinel?.remove();
+    };
   }, [assignment, expose, subjectId]);
 
   const metadata = runtime?.inspectorEnabled

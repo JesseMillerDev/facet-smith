@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const usesExternalServer =
+  process.env.FACETSMITH_E2E_EXTERNAL_SERVER === "true";
+
 export default defineConfig({
   testDir: "./examples/next-app/e2e",
   fullyParallel: false,
@@ -14,14 +17,19 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
-  webServer: {
-    command: "corepack pnpm --filter @facet-smith/next-app dev --port 3100",
-    url: "http://127.0.0.1:3100",
-    reuseExistingServer: false,
-    timeout: 120_000,
-    env: {
-      NEXT_PUBLIC_EXPERIMENT_INSPECTOR: "true",
-      NEXT_PUBLIC_DEPLOYMENT_ENV: "development",
-    },
-  },
+  ...(usesExternalServer
+    ? {}
+    : {
+        webServer: {
+          command:
+            "corepack pnpm --filter @facet-smith/next-app dev --port 3100",
+          url: "http://127.0.0.1:3100",
+          reuseExistingServer: false,
+          timeout: 120_000,
+          env: {
+            NEXT_PUBLIC_EXPERIMENT_INSPECTOR: "true",
+            NEXT_PUBLIC_DEPLOYMENT_ENV: "development",
+          },
+        },
+      }),
 });

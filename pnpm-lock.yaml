@@ -109,7 +109,14 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  packages/cli: {}
+  packages/cli:
+    dependencies:
+      '@facet-smith/core':
+        specifier: workspace:*
+        version: link:../core
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
 
   packages/core: {}
 

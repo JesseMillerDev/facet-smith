@@ -19,8 +19,9 @@ interface HeroProps {
   title: string;
 }
 
-const PricingHero = createClientExperiment({
+const PricingHero = createClientExperiment<HeroProps>()({
   id: "pricing-hero",
+  iteration: "launch-1",
   defaultVariant: "control",
   variants: {
     control: {
@@ -44,7 +45,7 @@ export function App() {
 }
 ```
 
-The runtime distinguishes assignment from actual visible exposure, supports server-provided initial assignments, and safely renders the default without a provider. The optional inspector is a separate package and is not required in production bundles.
+The explicit generic is the shared prop contract every variant must accept. Direct calls remain supported and infer the safe intersection of variant props. The runtime distinguishes assignment from actual visible exposure, supports iteration-matched server assignments, and safely renders the default without a provider. The optional inspector is a separate package and is not required in production bundles.
 
 Use visibility-qualified experiment attribution at the application's existing
 analytics boundary:

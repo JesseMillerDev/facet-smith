@@ -26,6 +26,7 @@ function result<TVariants extends Record<string, VariantMetadata>>(
   if (!revision) throw new Error(`Variant "${variantId}" has no revision`);
   return {
     experimentId: definition.id,
+    experimentIteration: definition.iteration,
     variantId,
     variantRevision: revision,
     source,
@@ -39,12 +40,9 @@ export function resolveExperiment<
   definition: ExperimentDefinition<TVariants>,
   options: ResolveOptions = {},
 ): AssignmentResult<keyof TVariants & string> {
-  try {
-    validateExperiment(definition);
-  } catch (error) {
-    if (options.mode !== "production") throw error;
-    return result(definition, definition.defaultVariant, "default");
-  }
+  // Source definitions always fail fast. Production fallback is reserved for
+  // external assignment failures, never malformed static source.
+  validateExperiment(definition);
 
   const developerOverride = options.developerOverrides?.[definition.id];
   if (validOverride(definition, developerOverride)) {
@@ -59,7 +57,12 @@ export function resolveExperiment<
   }
 
   const bucket = hashToBucket(
-    assignmentKey(definition.id, options.subjectId, definition.salt),
+    assignmentKey(
+      definition.id,
+      options.subjectId,
+      definition.salt,
+      definition.iteration,
+    ),
   );
   let cumulative = 0;
   const orderedVariants = Object.keys(definition.variants).sort() as Array<

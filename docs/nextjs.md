@@ -72,4 +72,4 @@ The example treats URL overrides as developer overrides and the reserved cookie 
 
 ## SSR, caching, and hydration
 
-Pass the server assignment through `initialAssignments` when the same experiment has a client boundary. A matching variant and revision is reused during hydration. Reading request cookies makes that route dynamic; never place personalized output in a shared full-page cache. Static data can still be fetched/cached outside this request-specific resolution. Streaming does not permit setting cookies during Server Component render, which is why all mutations use a route handler.
+Pass the server assignment through `initialAssignments` when the same experiment has a client boundary. A matching experiment ID, iteration, variant, and revision is reused during hydration. Reading request cookies makes that route dynamic; never place personalized output in a shared full-page cache. Static data can still be fetched/cached outside this request-specific resolution. Streaming does not permit setting cookies during Server Component render, which is why all mutations use a route handler.

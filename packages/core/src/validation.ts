@@ -24,6 +24,15 @@ export function getExperimentValidationIssues<
   if (!isValidIdentifier(definition.id)) {
     issues.push({ path: "id", message: "must be 1-128 URL-safe characters" });
   }
+  if (
+    typeof definition.iteration !== "string" ||
+    !isValidRevision(definition.iteration)
+  ) {
+    issues.push({
+      path: "iteration",
+      message: "must be a non-empty URL-safe immutable iteration",
+    });
+  }
 
   const variantIds = Object.keys(definition.variants);
   if (variantIds.length === 0) {

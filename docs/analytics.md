@@ -14,13 +14,13 @@ interface ExperimentAnalyticsAdapter {
 }
 ```
 
-Events contain experiment ID, variant ID, revision, assignment source, ISO
+Events contain experiment ID, iteration, variant ID, revision, assignment source, ISO
 timestamp, and—when available—subject ID, URL/route, and application context.
 `noopAnalyticsAdapter`, `createConsoleAnalyticsAdapter()`, and
 `InMemoryAnalyticsAdapter` cover disabled, development, and test scenarios.
 
 Assignment is not exposure. FacetSmith emits only after experimental content
-becomes visible and deduplicates each experiment/variant/revision for the
+becomes visible and deduplicates each experiment/iteration/variant/revision for the
 provider lifetime.
 
 ## PostHog example
@@ -36,6 +36,7 @@ export const posthogExperiments: ExperimentAnalyticsAdapter = {
   exposure(event) {
     posthog.capture("experiment_exposure", {
       experiment_id: event.experimentId,
+      experiment_iteration: event.experimentIteration,
       variant_id: event.variantId,
       variant_revision: event.variantRevision,
       assignment_source: event.assignmentSource,
@@ -86,8 +87,8 @@ const analytics = useApplicationAnalytics();
 analytics.track("document_shared", { documentId });
 ```
 
-Each attribution contains `experimentId`, `variantId`, `variantRevision`, and
-`assignmentSource`. The snapshot is empty before visibility, safe outside a
+Each attribution contains `experimentId`, `experimentIteration`, `variantId`,
+`variantRevision`, and `assignmentSource`. The snapshot is empty before visibility, safe outside a
 provider, deterministically ordered by experiment ID, and retained for the
 provider lifetime. Changing the provider subject clears attribution until the
 new subject sees the experiment. The snapshot is deliberately not persisted to

@@ -9,6 +9,7 @@ import {
 
 const event: ExperimentExposureEvent = {
   experimentId: "hero",
+  experimentIteration: "launch-1",
   variantId: "control",
   variantRevision: "1",
   assignmentSource: "default",
@@ -20,6 +21,7 @@ describe("analytics adapters", () => {
     expect(
       toExperimentAttribution({
         experimentId: "hero",
+        experimentIteration: "launch-1",
         variantId: "control",
         variantRevision: "1",
         source: "deterministic",
@@ -27,12 +29,14 @@ describe("analytics adapters", () => {
       }),
     ).toEqual({
       experimentId: "hero",
+      experimentIteration: "launch-1",
       variantId: "control",
       variantRevision: "1",
       assignmentSource: "deterministic",
     });
     expect(toExperimentAttribution(event)).toEqual({
       experimentId: "hero",
+      experimentIteration: "launch-1",
       variantId: "control",
       variantRevision: "1",
       assignmentSource: "default",

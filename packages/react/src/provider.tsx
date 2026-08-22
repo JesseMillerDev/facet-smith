@@ -2,6 +2,7 @@
 
 import {
   applyOverridesToUrl,
+  createExperimentDefinitionRegistry,
   OVERRIDE_QUERY_PARAMETER,
   parseOverrides,
   resolveExperiment,
@@ -90,6 +91,7 @@ export function ExperimentProvider({
     readonly RegisteredExperiment[]
   >([]);
   const exposed = useRef(new Set<string>());
+  const definitionRegistry = useRef(createExperimentDefinitionRegistry());
   const [exposedState, setExposedState] = useState<ExposedExperimentState>(
     () => ({ subjectId, exposures: EMPTY_EXPERIMENT_ATTRIBUTION }),
   );
@@ -125,6 +127,7 @@ export function ExperimentProvider({
     <TVariants extends Record<string, VariantMetadata>>(
       definition: ExperimentDefinition<TVariants>,
     ): AssignmentResult<keyof TVariants & string> => {
+      definitionRegistry.current.register(definition);
       const browserOverride = effectiveOverrides[definition.id];
       if (browserOverride !== undefined) {
         return resolveExperiment(definition, {
@@ -140,6 +143,8 @@ export function ExperimentProvider({
       const initial = initialAssignments[definition.id];
       if (
         initial &&
+        initial.experimentId === definition.id &&
+        initial.experimentIteration === definition.iteration &&
         Object.hasOwn(definition.variants, initial.variantId) &&
         definition.variants[initial.variantId]?.revision ===
           initial.variantRevision
@@ -269,6 +274,7 @@ export function ExperimentProvider({
         );
         if (
           existing?.variantId === attribution.variantId &&
+          existing.experimentIteration === attribution.experimentIteration &&
           existing.variantRevision === attribution.variantRevision &&
           existing.assignmentSource === attribution.assignmentSource
         ) {
@@ -286,7 +292,7 @@ export function ExperimentProvider({
           ),
         };
       });
-      const key = `${event.subjectId ?? ""}\u0000${event.experimentId}\u0000${event.variantId}\u0000${event.variantRevision}`;
+      const key = `${event.subjectId ?? ""}\u0000${event.experimentId}\u0000${event.experimentIteration}\u0000${event.variantId}\u0000${event.variantRevision}`;
       if (exposed.current.has(key)) return;
       exposed.current.add(key);
       const enriched = analyticsContext

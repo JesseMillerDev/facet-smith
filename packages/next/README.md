@@ -18,6 +18,7 @@ import {
 
 const Hero = createNextExperiment({
   id: "server-hero",
+  iteration: "launch-1",
   defaultVariant: "control",
   variants: {
     control: { revision: "1", component: Control },

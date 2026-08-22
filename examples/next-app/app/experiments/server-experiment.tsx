@@ -42,6 +42,7 @@ function Narrative({ release }: ServerCardProps) {
 
 export const ServerCard = createNextExperiment({
   id: "server-card",
+  iteration: "launch-1",
   defaultVariant: "technical",
   variants: {
     technical: { component: Technical, revision: "1" },

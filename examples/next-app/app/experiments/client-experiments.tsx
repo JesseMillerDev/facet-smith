@@ -8,6 +8,7 @@ export interface HeroProps {
 
 const Confidence = createClientExperiment({
   id: "confidence-note",
+  iteration: "launch-1",
   defaultVariant: "numbers",
   variants: {
     numbers: {
@@ -94,6 +95,7 @@ function Split({ title }: HeroProps) {
 
 export const PricingHero = createClientExperiment({
   id: "pricing-hero",
+  iteration: "launch-1",
   defaultVariant: "control",
   variants: {
     control: { component: Control, revision: "1" },

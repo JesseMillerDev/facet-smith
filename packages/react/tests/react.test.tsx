@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { InMemoryAnalyticsAdapter } from "@facet-smith/analytics";
 import {
@@ -17,6 +17,7 @@ interface GreetingProps {
 
 const Greeting = createClientExperiment({
   id: "greeting",
+  iteration: "launch-1",
   defaultVariant: "control",
   variants: {
     control: {
@@ -33,6 +34,7 @@ const Greeting = createClientExperiment({
 
 let observerCallback: IntersectionObserverCallback;
 const disconnect = vi.fn();
+let observedTargets: Element[];
 
 function AttributionProbe() {
   const attribution = useExposedExperiments();
@@ -43,11 +45,12 @@ function AttributionProbe() {
 
 beforeEach(() => {
   disconnect.mockClear();
+  observedTargets = [];
   class MockObserver {
     constructor(callback: IntersectionObserverCallback) {
       observerCallback = callback;
     }
-    observe = vi.fn();
+    observe = vi.fn((target: Element) => observedTargets.push(target));
     disconnect = disconnect;
     unobserve = vi.fn();
     takeRecords = () => [];
@@ -90,9 +93,10 @@ describe("React experiments", () => {
       observerCallback(
         [
           {
+            target: observedTargets.at(-1),
             isIntersecting: true,
             intersectionRatio: 1,
-          } as IntersectionObserverEntry,
+          } as unknown as IntersectionObserverEntry,
         ],
         {} as IntersectionObserver,
       );
@@ -107,14 +111,222 @@ describe("React experiments", () => {
       observerCallback(
         [
           {
+            target: observedTargets.at(-1),
             isIntersecting: true,
             intersectionRatio: 1,
-          } as IntersectionObserverEntry,
+          } as unknown as IntersectionObserverEntry,
         ],
         {} as IntersectionObserver,
       );
     });
     expect(analytics.events).toHaveLength(1);
+  });
+
+  it("observes every top-level variant element and exposes when any is visible", () => {
+    const MultiRoot = createClientExperiment({
+      id: "multi-root",
+      iteration: "launch-1",
+      defaultVariant: "mixed",
+      variants: {
+        mixed: {
+          revision: "1",
+          component: () => (
+            <>
+              <div hidden>Hidden first root</div>
+              <button>Visible second root</button>
+            </>
+          ),
+        },
+      },
+      allocation: { mixed: 1 },
+    });
+    const analytics = new InMemoryAnalyticsAdapter();
+    render(
+      <ExperimentProvider subjectId="alice" analytics={analytics}>
+        <MultiRoot />
+      </ExperimentProvider>,
+    );
+
+    const visibleButton = screen.getByRole("button");
+    expect(observedTargets).toContain(screen.getByText("Hidden first root"));
+    expect(observedTargets).toContain(visibleButton);
+    act(() => {
+      observerCallback(
+        [
+          {
+            target: visibleButton,
+            isIntersecting: true,
+            intersectionRatio: 1,
+          } as unknown as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      );
+    });
+
+    expect(analytics.events).toHaveLength(1);
+  });
+
+  it("uses an exposure sentinel for text-only variants", () => {
+    const TextOnly = createClientExperiment({
+      id: "text-only",
+      iteration: "launch-1",
+      defaultVariant: "plain",
+      variants: {
+        plain: { revision: "1", component: () => <>Just text</> },
+      },
+      allocation: { plain: 1 },
+    });
+    const analytics = new InMemoryAnalyticsAdapter();
+    const { container } = render(
+      <ExperimentProvider analytics={analytics}>
+        <TextOnly />
+      </ExperimentProvider>,
+    );
+
+    expect(screen.getByText("Just text")).toBeInTheDocument();
+    const sentinel = container.querySelector('[aria-hidden="true"]');
+    expect(sentinel).not.toBeNull();
+    expect(observedTargets).toContain(sentinel);
+    act(() => {
+      observerCallback(
+        [
+          {
+            target: sentinel,
+            isIntersecting: true,
+            intersectionRatio: 1,
+          } as unknown as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      );
+    });
+    expect(analytics.events).toHaveLength(1);
+  });
+
+  it("observes visible direct text even when a hidden element is also rendered", () => {
+    const MixedText = createClientExperiment({
+      id: "mixed-text",
+      iteration: "launch-1",
+      defaultVariant: "mixed",
+      variants: {
+        mixed: {
+          revision: "1",
+          component: () => (
+            <>
+              Visible text<div hidden>Hidden element</div>
+            </>
+          ),
+        },
+      },
+      allocation: { mixed: 1 },
+    });
+    const analytics = new InMemoryAnalyticsAdapter();
+    const { container } = render(
+      <ExperimentProvider analytics={analytics}>
+        <MixedText />
+      </ExperimentProvider>,
+    );
+
+    const sentinel = container.querySelector('[aria-hidden="true"]');
+    expect(sentinel).not.toBeNull();
+    expect(observedTargets).toContain(sentinel);
+    act(() => {
+      observerCallback(
+        [
+          {
+            target: sentinel,
+            isIntersecting: true,
+            intersectionRatio: 1,
+          } as unknown as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      );
+    });
+    expect(analytics.events).toHaveLength(1);
+  });
+
+  it("stops observing a text sentinel when direct text is removed", async () => {
+    const DynamicText = createClientExperiment({
+      id: "dynamic-text",
+      iteration: "launch-1",
+      defaultVariant: "dynamic",
+      variants: {
+        dynamic: {
+          revision: "1",
+          component: ({ show }: { show: boolean }) =>
+            show ? <>Temporary text</> : null,
+        },
+      },
+      allocation: { dynamic: 1 },
+    });
+    const analytics = new InMemoryAnalyticsAdapter();
+    const { container, rerender } = render(
+      <ExperimentProvider analytics={analytics}>
+        <DynamicText show />
+      </ExperimentProvider>,
+    );
+    const sentinel = container.querySelector('[aria-hidden="true"]');
+    expect(sentinel).not.toBeNull();
+
+    rerender(
+      <ExperimentProvider analytics={analytics}>
+        <DynamicText show={false} />
+      </ExperimentProvider>,
+    );
+    await waitFor(() =>
+      expect(container.querySelector('[aria-hidden="true"]')).toBeNull(),
+    );
+    act(() => {
+      observerCallback(
+        [
+          {
+            target: sentinel,
+            isIntersecting: true,
+            intersectionRatio: 1,
+          } as unknown as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      );
+    });
+    expect(analytics.events).toHaveLength(0);
+  });
+
+  it("does not expose a null-rendering variant", () => {
+    const NullOnly = createClientExperiment({
+      id: "null-only",
+      iteration: "launch-1",
+      defaultVariant: "empty",
+      variants: { empty: { revision: "1", component: () => null } },
+      allocation: { empty: 1 },
+    });
+    const analytics = new InMemoryAnalyticsAdapter();
+    render(
+      <ExperimentProvider analytics={analytics}>
+        <NullOnly />
+      </ExperimentProvider>,
+    );
+
+    expect(observedTargets).toEqual([]);
+    expect(analytics.events).toHaveLength(0);
+  });
+
+  it("does not expose null output in the no-IntersectionObserver fallback", () => {
+    vi.stubGlobal("IntersectionObserver", undefined);
+    const NullOnly = createClientExperiment({
+      id: "fallback-null",
+      iteration: "launch-1",
+      defaultVariant: "empty",
+      variants: { empty: { revision: "1", component: () => null } },
+      allocation: { empty: 1 },
+    });
+    const analytics = new InMemoryAnalyticsAdapter();
+
+    render(
+      <ExperimentProvider analytics={analytics}>
+        <NullOnly />
+      </ExperimentProvider>,
+    );
+
+    expect(analytics.events).toHaveLength(0);
   });
 
   it("makes only visibly exposed assignments available for app analytics", () => {
@@ -132,9 +344,10 @@ describe("React experiments", () => {
       observerCallback(
         [
           {
+            target: observedTargets.at(-1),
             isIntersecting: true,
             intersectionRatio: 1,
-          } as IntersectionObserverEntry,
+          } as unknown as IntersectionObserverEntry,
         ],
         {} as IntersectionObserver,
       );
@@ -146,6 +359,7 @@ describe("React experiments", () => {
       exposures: [
         {
           experimentId: "greeting",
+          experimentIteration: "launch-1",
           variantId: "control",
           variantRevision: "1",
           assignmentSource: "deterministic",
@@ -166,9 +380,10 @@ describe("React experiments", () => {
       observerCallback(
         [
           {
+            target: observedTargets.at(-1),
             isIntersecting: true,
             intersectionRatio: 1,
-          } as IntersectionObserverEntry,
+          } as unknown as IntersectionObserverEntry,
         ],
         {} as IntersectionObserver,
       );
@@ -179,6 +394,7 @@ describe("React experiments", () => {
       exposures: [
         {
           experimentId: "greeting",
+          experimentIteration: "launch-1",
           variantId: "warm",
           variantRevision: "2",
           assignmentSource: "developer-override",
@@ -202,9 +418,10 @@ describe("React experiments", () => {
       observerCallback(
         [
           {
+            target: observedTargets.at(-1),
             isIntersecting: true,
             intersectionRatio: 1,
-          } as IntersectionObserverEntry,
+          } as unknown as IntersectionObserverEntry,
         ],
         {} as IntersectionObserver,
       );
@@ -229,6 +446,32 @@ describe("React experiments", () => {
     expect(screen.getByText("Control Ada")).toBeInTheDocument();
   });
 
+  it("fails loudly when one provider sees conflicting experiment IDs", () => {
+    const First = createClientExperiment({
+      id: "collision",
+      iteration: "launch-1",
+      defaultVariant: "control",
+      variants: { control: { revision: "1", component: () => null } },
+      allocation: { control: 1 },
+    });
+    const Second = createClientExperiment({
+      id: "collision",
+      iteration: "launch-2",
+      defaultVariant: "control",
+      variants: { control: { revision: "1", component: () => null } },
+      allocation: { control: 1 },
+    });
+
+    expect(() =>
+      render(
+        <ExperimentProvider>
+          <First />
+          <Second />
+        </ExperimentProvider>,
+      ),
+    ).toThrow(/Conflicting definitions use experiment ID/);
+  });
+
   it("honors a matching pre-resolved server assignment on first render", () => {
     render(
       <ExperimentProvider
@@ -236,6 +479,7 @@ describe("React experiments", () => {
         initialAssignments={{
           greeting: {
             experimentId: "greeting",
+            experimentIteration: "launch-1",
             variantId: "warm",
             variantRevision: "2",
             source: "qa-override",
@@ -246,6 +490,27 @@ describe("React experiments", () => {
       </ExperimentProvider>,
     );
     expect(screen.getByText("Welcome Ada")).toBeInTheDocument();
+  });
+
+  it("rejects a pre-resolved assignment with a mismatched experiment ID", () => {
+    render(
+      <ExperimentProvider
+        subjectId="alice"
+        initialAssignments={{
+          greeting: {
+            experimentId: "another-experiment",
+            experimentIteration: "launch-1",
+            variantId: "warm",
+            variantRevision: "2",
+            source: "qa-override",
+          },
+        }}
+      >
+        <Greeting name="Ada" />
+      </ExperimentProvider>,
+    );
+
+    expect(screen.getByText("Control Ada")).toBeInTheDocument();
   });
 
   it("exports stable inspector-only test markers", () => {

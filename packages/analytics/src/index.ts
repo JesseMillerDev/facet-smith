@@ -3,6 +3,7 @@ import type { AssignmentResult, AssignmentSource } from "@facet-smith/core";
 /** Immutable experiment identity suitable for attaching to application events. */
 export interface ExperimentAttribution {
   readonly experimentId: string;
+  readonly experimentIteration: string;
   readonly variantId: string;
   readonly variantRevision: string;
   readonly assignmentSource: AssignmentSource;
@@ -26,6 +27,7 @@ export function toExperimentAttribution(
 ): ExperimentAttribution {
   return {
     experimentId: source.experimentId,
+    experimentIteration: source.experimentIteration,
     variantId: source.variantId,
     variantRevision: source.variantRevision,
     assignmentSource:

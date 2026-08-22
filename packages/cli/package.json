@@ -24,6 +24,10 @@
     "build": "tsup src/cli.ts --format esm --clean && node scripts/copy-skill.mjs",
     "typecheck": "tsc -p tsconfig.json"
   },
+  "dependencies": {
+    "@facet-smith/core": "workspace:*",
+    "typescript": "5.9.3"
+  },
   "engines": {
     "node": ">=20"
   },

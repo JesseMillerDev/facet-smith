@@ -77,7 +77,8 @@ export function ProviderShell({
                 {events.map((event, index) => (
                   <li key={`${event.experimentId}-${event.variantId}-${index}`}>
                     <strong>{event.experimentId}</strong> / {event.variantId} /
-                    revision {event.variantRevision}
+                    iteration {event.experimentIteration} / revision{" "}
+                    {event.variantRevision}
                   </li>
                 ))}
               </ol>

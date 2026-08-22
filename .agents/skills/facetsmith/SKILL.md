@@ -22,7 +22,8 @@ Do not add packages the application does not need. Do not introduce a FacetSmith
 ## Preserve experiment identity
 
 - Keep experiment IDs and variant IDs stable once they have received traffic.
-- Treat `(experiment ID, variant ID, revision)` as an immutable analytics identity.
+- Treat `(experiment ID, iteration, variant ID, revision)` as an immutable analytics identity.
+- Start a new immutable iteration when allocation, salt, eligibility, randomization unit, or assignment provider changes.
 - Increment a variant revision after every behavior-bearing change to a traffic-exposed implementation. Never rewrite the meaning of a historical revision.
 - Keep allocations explicit, non-negative, and totaling one. Do not change allocation or production experiment state without explicit human authorization.
 - Keep each new variant independently reviewable, preferably in a separate source file, while preserving the experiment's shared prop contract.
@@ -37,9 +38,13 @@ Do not add packages the application does not need. Do not introduce a FacetSmith
 
 ## Use the correct rendering boundary
 
-For client React components, define the experiment with `createClientExperiment` or its `createExperiment` alias in a client module and render it beneath `ExperimentProvider`.
+For client React components, prefer the explicit shared prop contract `createClientExperiment<Props>()(...)` or its `createExperiment` alias in a client module and render it beneath `ExperimentProvider`.
 
-For Next.js Server Components, use `createNextExperiment` and `readExperimentOptions({ searchParams })` from `@facet-smith/next/server`. Resolve and render with the returned options, then pass the same options and initial assignment to `NextExperimentProvider`. A server override requires the validated route handler; the Next provider already mounts the refresh bridge. Do not simulate the switch with client-only state.
+For Next.js Server Components, prefer `createNextExperiment<Props>()(...)` and use `readExperimentOptions({ searchParams })` from `@facet-smith/next/server`. Resolve and render with the returned options, then pass the same options and initial assignment to `NextExperimentProvider`. A server override requires the validated route handler; the Next provider already mounts the refresh bridge. Do not simulate the switch with client-only state.
+
+## Use the agent integrity interface
+
+Run `facetsmith check --json` before and after changing experiments. Read `facetsmith manifest` when locating definitions or coordinating multiple variants. Keep identity, revisions, and allocation as static object literals so the CLI can inspect them without executing application code. Resolve every `FS100`, `FS101`, and `FS102` diagnostic before completion.
 
 Reading subject or override cookies makes personalized Next.js routes request-time rendered. Never place subject-specific HTML in a shared full-page cache. Cache invariant data outside the personalized boundary.
 
@@ -55,4 +60,4 @@ Load `@facet-smith/inspector` behind a build-time condition so production bundle
 
 ## Complete changes with evidence
 
-Before changing an experiment, inspect its definition, variants, tests, design tokens, analytics adapter, and server/client boundary. State the hypothesis and intended success metric when adding a variant. In inspector-enabled browser tests, use `experimentMarkerSelector()` and `EXPERIMENT_MARKER_ATTRIBUTES` rather than private marker strings. Afterward, run the repository's type, behavior, accessibility, and supported-viewport checks. Report the exact experiment/variant/revision change and call out any caching, identity, analytics, or production-safety implications.
+Before changing an experiment, inspect its manifest entry, definition, variants, tests, design tokens, analytics adapter, and server/client seam. State the hypothesis and intended success metric when adding a variant. In inspector-enabled browser tests, use `experimentMarkerSelector()` and `EXPERIMENT_MARKER_ATTRIBUTES` rather than private marker strings. Afterward, run the integrity, type, behavior, accessibility, and supported-viewport checks. Report the exact experiment/iteration/variant/revision change and call out any caching, identity, analytics, or production-safety implications.

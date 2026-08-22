@@ -11,6 +11,8 @@ export interface ExperimentDefinition<
   >,
 > {
   readonly id: string;
+  /** Immutable identity for one experimental run. Change it when assignment semantics change. */
+  readonly iteration: string;
   readonly defaultVariant: keyof TVariants & string;
   readonly variants: TVariants;
   readonly allocation: { readonly [K in keyof TVariants]: number };
@@ -25,6 +27,7 @@ export type AssignmentSource =
 
 export interface AssignmentResult<TVariant extends string = string> {
   readonly experimentId: string;
+  readonly experimentIteration: string;
   readonly variantId: TVariant;
   readonly variantRevision: string;
   readonly source: AssignmentSource;
@@ -57,5 +60,17 @@ export class ExperimentValidationError extends Error {
     );
     this.name = "ExperimentValidationError";
     this.issues = issues;
+  }
+}
+
+export class ExperimentDefinitionCollisionError extends Error {
+  readonly experimentId: string;
+
+  constructor(experimentId: string) {
+    super(
+      `Conflicting definitions use experiment ID "${experimentId}". Experiment IDs must identify one definition within a runtime or manifest.`,
+    );
+    this.name = "ExperimentDefinitionCollisionError";
+    this.experimentId = experimentId;
   }
 }

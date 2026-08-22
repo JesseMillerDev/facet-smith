@@ -8,10 +8,12 @@ import {
   resolveExperiment,
   serializeOverrides,
   stableHash,
+  validateExperimentDefinitions,
 } from "../src";
 
 const experiment = defineExperiment({
   id: "pricing-hero",
+  iteration: "launch-1",
   defaultVariant: "control",
   variants: {
     control: { revision: "1" },
@@ -44,10 +46,11 @@ describe("stable assignment", () => {
     expect(
       resolveExperiment(experiment, { subjectId: "subject-42" }),
     ).toMatchObject({
+      experimentIteration: "launch-1",
       variantId: "socialProof",
       variantRevision: "1",
       source: "deterministic",
-      bucket: 0.6760943224653602,
+      bucket: 0.8670612385030836,
     });
   });
 
@@ -65,6 +68,18 @@ describe("stable assignment", () => {
 });
 
 describe("validation and resolution", () => {
+  it.each([undefined, null, 123])(
+    "rejects a non-string iteration at runtime: %s",
+    (iteration) => {
+      expect(() =>
+        defineExperiment({
+          ...experiment,
+          iteration: iteration as unknown as string,
+        }),
+      ).toThrow(ExperimentValidationError);
+    },
+  );
+
   it.each([
     [{ control: -1, concise: 1, socialProof: 1 }],
     [{ control: 0.5, concise: 0.5 }],
@@ -100,16 +115,43 @@ describe("validation and resolution", () => {
     expect(resolveExperiment(experiment).source).toBe("default");
   });
 
-  it("falls back safely in production for an invalid definition", () => {
+  it("treats an iteration change as a new assignment identity", () => {
+    const nextIteration = defineExperiment({
+      ...experiment,
+      iteration: "launch-2",
+    });
+    const first = resolveExperiment(experiment, { subjectId: "subject-42" });
+    const second = resolveExperiment(nextIteration, {
+      subjectId: "subject-42",
+    });
+
+    expect(first.experimentIteration).toBe("launch-1");
+    expect(second.experimentIteration).toBe("launch-2");
+    expect(second.bucket).not.toBe(first.bucket);
+  });
+
+  it("rejects conflicting duplicate experiment IDs in a manifest", () => {
+    expect(() =>
+      validateExperimentDefinitions([
+        experiment,
+        { ...experiment, iteration: "launch-2" },
+      ]),
+    ).toThrow(/Conflicting definitions use experiment ID/);
+
+    expect(
+      validateExperimentDefinitions([experiment, experiment]),
+    ).toHaveLength(2);
+  });
+
+  it("fails fast for an invalid source definition in every mode", () => {
     const invalid = {
       ...experiment,
       allocation: { control: 1 } as unknown as typeof experiment.allocation,
     };
     expect(() => resolveExperiment(invalid)).toThrow(ExperimentValidationError);
-    expect(resolveExperiment(invalid, { mode: "production" })).toMatchObject({
-      variantId: "control",
-      source: "default",
-    });
+    expect(() => resolveExperiment(invalid, { mode: "production" })).toThrow(
+      ExperimentValidationError,
+    );
   });
 });
 

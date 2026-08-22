@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable no-redeclare -- TypeScript overloads share one implementation. */
+
 import {
   resolveExperiment,
   validateExperiment,
@@ -46,6 +48,7 @@ type VariantShape = {
 };
 interface ClientDefinitionShape {
   readonly id: string;
+  readonly iteration: string;
   readonly defaultVariant: string;
   readonly variants: Readonly<Record<string, VariantShape>>;
   readonly allocation: Readonly<Record<string, number>>;
@@ -57,21 +60,52 @@ type PropsOfComponent<T> = T extends (props: infer P) => unknown
     ? P
     : never;
 type InferredProps<TVariants extends Record<string, VariantShape>> =
-  PropsOfComponent<TVariants[keyof TVariants]["component"]> extends infer P
+  UnionToIntersection<
+    PropsOfComponent<TVariants[keyof TVariants]["component"]>
+  > extends infer P
     ? unknown extends P
       ? Record<string, never>
       : P extends object
         ? P
         : never
     : never;
+type UnionToIntersection<U> = (
+  U extends unknown ? (value: U) => void : never
+) extends (value: infer I) => void
+  ? I
+  : never;
 type VariantsOf<T> = T extends {
   readonly variants: infer V extends Record<string, VariantShape>;
 }
   ? V
   : never;
 
+export function createClientExperiment<P>(): <
+  const TVariants extends Record<
+    string,
+    VariantShape & { readonly component: ComponentType<P> }
+  >,
+>(
+  definition: ExperimentDefinition<TVariants>,
+) => ExperimentComponent<P, keyof TVariants & string>;
 export function createClientExperiment<const TDefinition>(
   definition: TDefinition extends ClientDefinitionShape ? TDefinition : never,
+): ExperimentComponent<
+  InferredProps<VariantsOf<TDefinition>>,
+  keyof VariantsOf<TDefinition> & string
+>;
+export function createClientExperiment(
+  definition?: ClientDefinitionShape,
+): unknown {
+  if (definition === undefined) {
+    return (explicitDefinition: ClientDefinitionShape) =>
+      buildClientExperiment(explicitDefinition);
+  }
+  return buildClientExperiment(definition);
+}
+
+function buildClientExperiment<const TDefinition extends ClientDefinitionShape>(
+  definition: TDefinition,
 ): ExperimentComponent<
   InferredProps<VariantsOf<TDefinition>>,
   keyof VariantsOf<TDefinition> & string

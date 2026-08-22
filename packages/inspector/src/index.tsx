@@ -217,8 +217,8 @@ export function ExperimentInspector() {
                     boxShadow: "0 3px 12px rgb(0 0 0 / 22%)",
                   }}
                 >
-                  {item.experimentId} · {item.variantId} · r
-                  {item.variantRevision}
+                  {item.experimentId} · i{item.experimentIteration} ·{" "}
+                  {item.variantId} · r{item.variantRevision}
                 </button>
                 {active ? (
                   <div
@@ -249,6 +249,15 @@ export function ExperimentInspector() {
                     <strong style={{ display: "block", marginBottom: 8 }}>
                       {item.experimentId}
                     </strong>
+                    <span
+                      style={{
+                        display: "block",
+                        marginBottom: 8,
+                        color: colors.muted,
+                      }}
+                    >
+                      iteration {item.experimentIteration}
+                    </span>
                     <div style={{ display: "grid", gap: 6 }}>
                       {Object.entries(item.variants).map(
                         ([variantId, revision]) => (

@@ -390,6 +390,7 @@ void [
 
 const attribution: ExperimentAttribution = {
   experimentId: "release-check",
+  experimentIteration: "launch-1",
   variantId: "control",
   variantRevision: "1",
   assignmentSource: "default",
