@@ -1,5 +1,27 @@
 # @facet-smith/next
 
+## 0.4.0
+
+### Minor Changes
+
+- 030bcac: Delegate variant assignment through public synchronous or asynchronous
+  `AssignmentResolver` adapters while retaining the existing FNV-1a resolver as
+  the default. FacetSmith now validates resolver output against source variants,
+  contains resolver failures and timeouts with stable diagnostics, preserves
+  override precedence, and suppresses exposure for unassigned defaults.
+
+  Existing definitions require no changes. To delegate assignment, pass a
+  resolver with a static `id` as the second factory argument; source allocation
+  may then be omitted. Start a new experiment iteration when migrating an active
+  experiment to a different resolver or vendor-key mapping. The CLI manifest is
+  now schema v2 and records `resolverId` with optional allocation.
+
+### Patch Changes
+
+- Updated dependencies [030bcac]
+  - @facet-smith/core@0.3.0
+  - @facet-smith/react@0.5.0
+
 ## 0.3.0
 
 ### Minor Changes

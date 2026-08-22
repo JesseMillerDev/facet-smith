@@ -1,5 +1,13 @@
 # @facet-smith/inspector
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [030bcac]
+  - @facet-smith/core@0.3.0
+  - @facet-smith/react@0.5.0
+
 ## 0.2.0
 
 ### Minor Changes
