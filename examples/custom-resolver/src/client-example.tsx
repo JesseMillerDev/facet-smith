@@ -14,6 +14,7 @@ const ClientBanner = createClientExperiment(
     },
   },
   externalServiceResolver,
+  { fallback: () => <p>Loading delivery options</p> },
 );
 
 export function CustomResolverClientExample({

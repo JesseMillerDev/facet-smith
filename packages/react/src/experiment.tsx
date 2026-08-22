@@ -13,7 +13,9 @@ import {
 import {
   createElement,
   Suspense,
+  useEffect,
   useMemo,
+  useRef,
   type ComponentType,
   type ElementType,
 } from "react";
@@ -27,6 +29,14 @@ export type ExperimentComponent<
   readonly experimentId: string;
   readonly variants: readonly TVariant[];
 };
+
+export interface ClientExperimentOptions<P> {
+  /**
+   * Explicit content rendered while a client resolver is pending. Use `null`
+   * intentionally to render nothing. Server-resolved integrations do not use it.
+   */
+  readonly fallback?: ComponentType<P> | null;
+}
 
 export function useExperimentState<
   TVariants extends Record<string, VariantMetadata>,
@@ -98,10 +108,12 @@ export function createClientExperiment<P>(): <
 >(
   definition: ExperimentDefinition<TVariants>,
   resolver?: AssignmentResolver,
+  options?: ClientExperimentOptions<P>,
 ) => ExperimentComponent<P, keyof TVariants & string>;
 export function createClientExperiment<const TDefinition>(
   definition: TDefinition extends ClientDefinitionShape ? TDefinition : never,
   resolver?: AssignmentResolver,
+  options?: ClientExperimentOptions<InferredProps<VariantsOf<TDefinition>>>,
 ): ExperimentComponent<
   InferredProps<VariantsOf<TDefinition>>,
   keyof VariantsOf<TDefinition> & string
@@ -109,25 +121,34 @@ export function createClientExperiment<const TDefinition>(
 export function createClientExperiment(
   definition?: ClientDefinitionShape,
   resolver?: AssignmentResolver,
+  options?: unknown,
 ): unknown {
   if (definition === undefined) {
     return (
       explicitDefinition: ClientDefinitionShape,
       explicitResolver?: AssignmentResolver,
-    ) => buildClientExperiment(explicitDefinition, explicitResolver);
+      explicitOptions?: unknown,
+    ) =>
+      buildClientExperiment(
+        explicitDefinition,
+        explicitResolver,
+        explicitOptions,
+      );
   }
-  return buildClientExperiment(definition, resolver);
+  return buildClientExperiment(definition, resolver, options);
 }
 
 function buildClientExperiment<const TDefinition extends ClientDefinitionShape>(
   definition: TDefinition,
   resolver?: AssignmentResolver,
+  options?: unknown,
 ): ExperimentComponent<
   InferredProps<VariantsOf<TDefinition>>,
   keyof VariantsOf<TDefinition> & string
 > {
   type TVariants = VariantsOf<TDefinition>;
   type P = InferredProps<TVariants>;
+  const clientOptions = options as ClientExperimentOptions<P> | undefined;
   const checked = definition as unknown as ExperimentDefinition<TVariants>;
   validateExperiment(checked, resolver);
   const revisions = Object.fromEntries(
@@ -139,6 +160,22 @@ function buildClientExperiment<const TDefinition extends ClientDefinitionShape>(
 
   function ExperimentComponent(props: P) {
     const assignment = useExperimentState(checked, resolver);
+    const warnedMissingFallback = useRef(false);
+    const missingAsyncFallback =
+      assignment instanceof Promise && clientOptions?.fallback === undefined;
+    useEffect(() => {
+      if (
+        !missingAsyncFallback ||
+        warnedMissingFallback.current ||
+        process.env.NODE_ENV === "production"
+      ) {
+        return;
+      }
+      warnedMissingFallback.current = true;
+      console.warn(
+        `FacetSmith experiment "${checked.id}" suspended on a client assignment resolver without an explicit fallback. Pass { fallback: Component } or { fallback: null } as the third factory argument. Prefer server-resolved assignment when possible.`,
+      );
+    }, [missingAsyncFallback]);
     const renderAssignment = (
       resolved: AssignmentResult<keyof TVariants & string>,
     ) => {
@@ -153,9 +190,7 @@ function buildClientExperiment<const TDefinition extends ClientDefinitionShape>(
       );
     };
     if (assignment instanceof Promise) {
-      const Fallback = checked.variants[checked.defaultVariant]?.component as
-        | ComponentType<P>
-        | undefined;
+      const Fallback = clientOptions?.fallback;
       return (
         <Suspense fallback={Fallback ? createElement(Fallback, props) : null}>
           <AsyncExperiment assignment={assignment} render={renderAssignment} />

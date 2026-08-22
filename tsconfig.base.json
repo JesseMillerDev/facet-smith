@@ -7,6 +7,7 @@
     "baseUrl": ".",
     "paths": {
       "@facet-smith/core": ["packages/core/src/index.ts"],
+      "@facet-smith/growthbook": ["packages/growthbook/src/index.ts"],
       "@facet-smith/analytics": ["packages/analytics/src/index.ts"],
       "@facet-smith/react": ["packages/react/src/index.ts"],
       "@facet-smith/react/markers": ["packages/react/src/markers.ts"],

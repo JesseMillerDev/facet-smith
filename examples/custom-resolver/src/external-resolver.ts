@@ -21,6 +21,6 @@ export const externalServiceResolver = {
     if (!response.ok)
       throw new Error(`Flag service returned ${response.status}`);
     const assignment = (await response.json()) as ExternalAssignmentResponse;
-    return { variantId: assignment.variantId };
+    return { decision: "assigned", variantId: assignment.variantId };
   },
 } as const satisfies AssignmentResolver;

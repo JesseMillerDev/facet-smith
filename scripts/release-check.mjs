@@ -19,6 +19,11 @@ const packages = [
     archive: "core.tgz",
   },
   {
+    name: "@facet-smith/growthbook",
+    directory: "packages/growthbook",
+    archive: "growthbook.tgz",
+  },
+  {
     name: "@facet-smith/analytics",
     directory: "packages/analytics",
     archive: "analytics.tgz",
@@ -50,6 +55,10 @@ const expectedRuntimeExports = {
     "defineExperiment",
     "resolveExperiment",
     "stableHash",
+  ],
+  "@facet-smith/growthbook": [
+    "createGrowthBookResolver",
+    "growthBookIterationKey",
   ],
   "@facet-smith/analytics": [
     "InMemoryAnalyticsAdapter",
@@ -247,6 +256,7 @@ try {
         type: "module",
         dependencies: {
           ...localDependencies,
+          "@growthbook/growthbook": "1.7.0",
           "@types/node": "24.10.1",
           "@types/react": "19.2.7",
           "@types/react-dom": "19.2.3",
@@ -364,6 +374,7 @@ console.log("CommonJS marker import passed.");
   writeFileSync(
     join(consumerDirectory, "type-smoke.ts"),
     `import { defaultAssignmentResolver, defineExperiment, resolveExperiment, stableHash, type AssignmentResolver } from "@facet-smith/core";
+import { createGrowthBookResolver, growthBookIterationKey } from "@facet-smith/growthbook";
 import { InMemoryAnalyticsAdapter, toExperimentAttribution, type ExperimentAttribution } from "@facet-smith/analytics";
 import { ExperimentProvider, createClientExperiment, useExposedExperiments } from "@facet-smith/react";
 import { experimentMarkerSelector } from "@facet-smith/react/markers";
@@ -378,6 +389,8 @@ void [
   defaultAssignmentResolver,
   resolveExperiment,
   stableHash,
+  createGrowthBookResolver,
+  growthBookIterationKey,
   InMemoryAnalyticsAdapter,
   toExperimentAttribution,
   ExperimentProvider,
@@ -396,7 +409,7 @@ void [
 
 const customResolver = {
   id: "release-check-resolver",
-  resolve: () => ({ variantId: "control" }),
+  resolve: () => ({ decision: "assigned", variantId: "control" }),
 } as const satisfies AssignmentResolver;
 void customResolver;
 

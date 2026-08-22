@@ -4,7 +4,7 @@ FacetSmith follows one dependency direction: `core` is framework-free; `analytic
 
 ## Resolution flow
 
-Definitions are validated before use. Resolution checks a valid developer override, then a valid explicit QA override, then delegates to the configured assignment resolver. The default resolver is the original FNV-1a implementation: it hashes the framed tuple `(experiment ID, subject ID, salt, iteration)` into a bucket in `[0, 1)`, then traverses sorted variant IDs and normalized source allocations. Without a subject, resolution uses the default and suppresses exposure. Static source definitions fail fast in every environment; resolver failures and unknown returned variants safely use the unexposed default with stable diagnostics.
+Definitions are validated before use. Resolution checks a valid developer override, then a valid explicit QA override, then delegates to the configured assignment resolver. The default resolver is the original FNV-1a implementation: it hashes the framed tuple `(experiment ID, subject ID, salt, iteration)` into a bucket in `[0, 1)`, then traverses sorted variant IDs and normalized source allocations. Without a subject, resolution uses the default and suppresses exposure. A resolver decision is either assigned or ineligible; ineligible selections require a diagnostic reason, may render a declared forced/default value, and suppress exposure. Static source definitions fail fast in every environment; resolver failures and unknown returned variants safely use the unexposed default with stable diagnostics.
 
 The hash is 32-bit FNV-1a over JavaScript UTF-16 code units with `Math.imul`. This deliberately small implementation has no runtime dependencies and has golden tests locking both hash and assignment vectors across Node and browsers. Custom resolvers may be synchronous or asynchronous and may own allocation; source-declared variant IDs remain authoritative.
 
@@ -14,7 +14,7 @@ Assignment is a pure decision and has no side effects. A rendered experiment pla
 
 ## State ownership
 
-Each provider owns its definition registry, inspector registrations, overrides, exposure set, and latest visibly exposed attribution per experiment. Conflicting definitions with the same ID fail loudly within that provider; there is no process-global registry, so Server Component requests cannot leak identity or assignments. Pre-resolved assignments enter through provider props and are accepted only when iteration, variant, revision, and resolver identity match the local definition. Applications can read the provider-lifetime attribution snapshot to enrich their existing analytics; FacetSmith does not persist it or intercept application events.
+Each provider owns its definition registry, inspector registrations, overrides, exposure set, and latest visibly exposed attribution per experiment. Conflicting definitions with the same ID fail loudly within that provider; there is no process-global registry, so Server Component requests cannot leak identity or assignments. Pre-resolved assignments enter through provider props and are accepted only when iteration, variant, revision, and resolver identity match the local definition. Legacy hydration records without resolver identity are normalized once at provider ingress to the default resolver; all downstream state uses the canonical required identity. Applications can read the provider-lifetime attribution snapshot to enrich their existing analytics; FacetSmith does not persist it or intercept application events.
 
 ## Agent integrity
 

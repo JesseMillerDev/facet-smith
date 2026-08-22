@@ -94,7 +94,7 @@ describe("React experiments", () => {
       },
       {
         id: "application-flags",
-        resolve: () => ({ variantId: "treatment" }),
+        resolve: () => ({ decision: "assigned", variantId: "treatment" }),
       },
     );
 
@@ -106,11 +106,13 @@ describe("React experiments", () => {
     expect(screen.getByText("Treatment")).toBeInTheDocument();
   });
 
-  it("renders an unexposed default while an async resolver is pending", async () => {
-    let complete: ((value: { variantId: string }) => void) | undefined;
+  it("renders an explicit unexposed fallback while an async resolver is pending", async () => {
+    let complete:
+      | ((value: { decision: "assigned"; variantId: string }) => void)
+      | undefined;
     const resolveAssignment = vi.fn(
       () =>
-        new Promise<{ variantId: string }>((resolve) => {
+        new Promise<{ decision: "assigned"; variantId: string }>((resolve) => {
           complete = resolve;
         }),
     );
@@ -131,6 +133,7 @@ describe("React experiments", () => {
         id: "async-flags",
         resolve: resolveAssignment,
       },
+      { fallback: () => <p>Loading assignment</p> },
     );
     const analytics = new InMemoryAnalyticsAdapter();
     render(
@@ -139,12 +142,53 @@ describe("React experiments", () => {
       </ExperimentProvider>,
     );
 
-    expect(screen.getByText("Pending control")).toBeInTheDocument();
+    expect(screen.getByText("Loading assignment")).toBeInTheDocument();
+    expect(screen.queryByText("Pending control")).not.toBeInTheDocument();
     expect(analytics.events).toHaveLength(0);
-    act(() => complete?.({ variantId: "treatment" }));
+    act(() => complete?.({ decision: "assigned", variantId: "treatment" }));
     expect(await screen.findByText("Async treatment")).toBeInTheDocument();
     expect(analytics.events).toHaveLength(0);
     expect(resolveAssignment).toHaveBeenCalledOnce();
+  });
+
+  it("warns and paints no implicit default when client async fallback is omitted", async () => {
+    const warning = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+    const Custom = createClientExperiment(
+      {
+        id: "custom-async-without-fallback",
+        iteration: "launch-1",
+        defaultVariant: "control",
+        variants: {
+          control: { revision: "1", component: () => <p>Implicit control</p> },
+          treatment: {
+            revision: "1",
+            component: () => <p>Resolved treatment</p>,
+          },
+        },
+      },
+      {
+        id: "async-without-fallback",
+        resolve: async () => ({
+          decision: "assigned",
+          variantId: "treatment",
+        }),
+      },
+    );
+
+    render(
+      <ExperimentProvider subjectId="alice">
+        <Custom />
+      </ExperimentProvider>,
+    );
+
+    expect(screen.queryByText("Implicit control")).not.toBeInTheDocument();
+    expect(warning).toHaveBeenCalledWith(
+      expect.stringContaining("without an explicit fallback"),
+    );
+    expect(await screen.findByText("Resolved treatment")).toBeInTheDocument();
+    warning.mockRestore();
   });
 
   it("does not expose a no-subject or rejected resolver default", () => {
@@ -161,7 +205,7 @@ describe("React experiments", () => {
       },
       {
         id: "invalid-flags",
-        resolve: () => ({ variantId: "remote-only" }),
+        resolve: () => ({ decision: "assigned", variantId: "remote-only" }),
       },
     );
     const { rerender } = render(
@@ -201,6 +245,48 @@ describe("React experiments", () => {
         {} as IntersectionObserver,
       );
     });
+    expect(analytics.events).toHaveLength(0);
+  });
+
+  it("renders an ineligible resolver value without exposing it", () => {
+    const analytics = new InMemoryAnalyticsAdapter();
+    const Ineligible = createClientExperiment(
+      {
+        id: "ineligible-variant",
+        iteration: "launch-1",
+        defaultVariant: "control",
+        variants: {
+          control: { revision: "1", component: () => <p>Not targeted</p> },
+          treatment: {
+            revision: "1",
+            component: () => <p>Forced treatment</p>,
+          },
+        },
+      },
+      {
+        id: "targeting-flags",
+        resolve: () =>
+          ({
+            decision: "ineligible",
+            variantId: "treatment",
+            diagnostics: [
+              {
+                code: "FORCED_VALUE",
+                message: "Vendor forced a non-experiment value.",
+              },
+            ],
+          }) as const,
+      },
+    );
+
+    render(
+      <ExperimentProvider subjectId="alice" analytics={analytics}>
+        <Ineligible />
+      </ExperimentProvider>,
+    );
+
+    expect(screen.getByText("Forced treatment")).toBeInTheDocument();
+    expect(observedTargets).toHaveLength(0);
     expect(analytics.events).toHaveLength(0);
   });
 
@@ -585,7 +671,7 @@ describe("React experiments", () => {
       },
       {
         id: "providerless-flags",
-        resolve: () => ({ variantId: "treatment" }),
+        resolve: () => ({ decision: "assigned", variantId: "treatment" }),
       },
     );
 
@@ -642,7 +728,8 @@ describe("React experiments", () => {
   it("reuses custom server assignments only for the matching resolver", () => {
     const resolver = {
       id: "hydration-flags",
-      resolve: () => ({ variantId: "treatment" }),
+      resolve: () =>
+        ({ decision: "assigned", variantId: "treatment" }) as const,
     } as const;
     const Hydrated = createClientExperiment(
       {

@@ -49,7 +49,7 @@ describe("Next.js server integration", () => {
     } as const;
     const synchronous = createNextExperiment(resolverDefinition, {
       id: "server-flags",
-      resolve: () => ({ variantId: "vivid" }),
+      resolve: () => ({ decision: "assigned", variantId: "vivid" }),
     });
     expect(synchronous.resolve({ subjectId: "subject-1" })).toMatchObject({
       variantId: "vivid",
@@ -59,7 +59,7 @@ describe("Next.js server integration", () => {
 
     const asynchronous = createNextExperiment(resolverDefinition, {
       id: "async-server-flags",
-      resolve: async () => ({ variantId: "vivid" }),
+      resolve: async () => ({ decision: "assigned", variantId: "vivid" }),
     });
     await expect(
       asynchronous.resolve({ subjectId: "subject-1" }),

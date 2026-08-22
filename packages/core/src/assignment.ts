@@ -149,13 +149,32 @@ export function resolveExperiment<
         resolverDiagnostics,
       );
     }
+    if (resolved.decision === "ineligible") {
+      const ineligibleDiagnostics =
+        resolverDiagnostics.length > 0
+          ? resolverDiagnostics
+          : [
+              diagnostic(
+                "FS203",
+                `Assignment resolver "${resolver.id}" returned an ineligible decision without a reason for experiment "${definition.id}".`,
+              ),
+            ];
+      return result(definition, resolved.variantId, "default", resolver.id, {
+        diagnostics: ineligibleDiagnostics,
+      });
+    }
+    if (resolved.decision !== "assigned") {
+      return fallback(
+        "FS201",
+        `Assignment resolver "${resolver.id}" returned an unreadable decision for experiment "${definition.id}".`,
+        resolverDiagnostics,
+      );
+    }
     return result(
       definition,
       resolved.variantId,
       resolver.id === DEFAULT_ASSIGNMENT_RESOLVER_ID
-        ? resolved.bucket === undefined
-          ? "default"
-          : "deterministic"
+        ? "deterministic"
         : "resolver",
       resolver.id,
       {

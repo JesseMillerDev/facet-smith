@@ -28,12 +28,22 @@ export interface InspectorConfiguration {
   readonly serverOverrideEndpoint?: string;
 }
 
+/**
+ * Hydration-only migration shape for assignments emitted before resolver identity
+ * became mandatory. The provider normalizes it immediately to AssignmentResult.
+ */
+export type InitialAssignment =
+  | AssignmentResult
+  | (Omit<AssignmentResult, "resolverId"> & {
+      readonly resolverId?: undefined;
+    });
+
 export interface ExperimentProviderProps {
   readonly children: ReactNode;
   readonly subjectId?: string;
   readonly assignmentAttributes?: Readonly<Record<string, unknown>>;
   readonly assignmentTimeoutMs?: number;
-  readonly initialAssignments?: Readonly<Record<string, AssignmentResult>>;
+  readonly initialAssignments?: Readonly<Record<string, InitialAssignment>>;
   readonly developerOverrides?: ExperimentOverrides;
   readonly qaOverrides?: ExperimentOverrides;
   readonly analytics?: ExperimentAnalyticsAdapter;

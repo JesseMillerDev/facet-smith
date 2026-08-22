@@ -46,9 +46,10 @@ Agents and CI can inspect every static source definition through the same determ
 ```bash
 npx @facet-smith/cli check --json
 npx @facet-smith/cli manifest
+npx @facet-smith/cli manifest --check facetsmith.manifest.json
 ```
 
-Diagnostics have stable codes and source locations. The manifest records experiment, iteration, variant, revision, resolver, optional allocation, and source identity without importing or executing application code.
+Diagnostics have stable codes and source locations. The manifest records experiment, iteration, variant, revision, resolver, optional allocation, and source identity without importing or executing application code. Commit it and use `manifest --check` when CI should detect assignment-identity drift across releases.
 
 ## Five-minute client experiment
 
@@ -176,6 +177,8 @@ See [analytics.md](docs/analytics.md), including a dependency-free PostHog adapt
 
 Assignment can be delegated to an application-owned flag platform without adding vendor dependencies to FacetSmith. See [assignment-resolvers.md](docs/assignment-resolvers.md) and the typechecked `examples/custom-resolver` package.
 
+For GrowthBook, `@facet-smith/growthbook` provides a server-resolved adapter with iteration-scoped sticky bucketing, first-party anonymous subject support, and non-assignment diagnostics. It deliberately does not provide a client SDK integration.
+
 ## Revision semantics
 
 **A revision is an immutable analytics identity.** Once a variant has received traffic, any behavior-bearing implementation change must increment its revision. `pricing-hero / concise / revision 1` and revision 2 are deliberately distinct exposures and must not be silently combined.
@@ -193,14 +196,15 @@ Assignment can be delegated to an application-owned flag platform without adding
 
 ## Packages
 
-| Package                  | Responsibility                                                       |
-| ------------------------ | -------------------------------------------------------------------- |
-| `@facet-smith/core`      | Validation, resolver contract, default FNV assignment, override URLs |
-| `@facet-smith/analytics` | Vendor-neutral exposure event contract and basic adapters            |
-| `@facet-smith/react`     | Provider, typed client factory, registry, visibility exposure        |
-| `@facet-smith/next`      | Server factory, request cookies, validated handler, router refresh   |
-| `@facet-smith/inspector` | Optional portal-based non-production overlay and toolbar             |
-| `@facet-smith/cli`       | Agent skill, source manifest, and machine-readable integrity checks  |
+| Package                   | Responsibility                                                        |
+| ------------------------- | --------------------------------------------------------------------- |
+| `@facet-smith/core`       | Validation, resolver contract, default FNV assignment, override URLs  |
+| `@facet-smith/growthbook` | Server-resolved GrowthBook assignment with iteration-safe sticky keys |
+| `@facet-smith/analytics`  | Vendor-neutral exposure event contract and basic adapters             |
+| `@facet-smith/react`      | Provider, typed client factory, registry, visibility exposure         |
+| `@facet-smith/next`       | Server factory, request cookies, validated handler, router refresh    |
+| `@facet-smith/inspector`  | Optional portal-based non-production overlay and toolbar              |
+| `@facet-smith/cli`        | Agent skill, source manifest, and machine-readable integrity checks   |
 
 The example is in `examples/next-app`; design notes are in [architecture.md](docs/architecture.md).
 
@@ -221,6 +225,7 @@ Deferred work includes a hosted control plane, GitHub application, agent-generat
 ```bash
 pnpm lint
 pnpm typecheck
+pnpm integrity:check
 pnpm test
 pnpm build
 pnpm release:check

@@ -1,0 +1,46 @@
+{
+  "name": "@facet-smith/growthbook",
+  "version": "0.1.0",
+  "description": "Server-resolved GrowthBook assignment adapter for FacetSmith",
+  "license": "MIT",
+  "author": "Jesse Miller",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JesseMillerDev/facet-smith.git",
+    "directory": "packages/growthbook"
+  },
+  "homepage": "https://github.com/JesseMillerDev/facet-smith#readme",
+  "bugs": {
+    "url": "https://github.com/JesseMillerDev/facet-smith/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean --external @growthbook/growthbook",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@facet-smith/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@growthbook/growthbook": ">=1.7.0 <2"
+  },
+  "devDependencies": {
+    "@growthbook/growthbook": "1.7.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

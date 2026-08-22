@@ -88,7 +88,10 @@ describe("stable assignment", () => {
 describe("assignment resolvers", () => {
   const resolverOwned = {
     id: "external-service",
-    resolve: vi.fn(() => ({ variantId: "concise" })),
+    resolve: vi.fn(() => ({
+      decision: "assigned" as const,
+      variantId: "concise",
+    })),
   } satisfies AssignmentResolver;
   const definition = {
     id: "resolver-owned",
@@ -163,13 +166,88 @@ describe("assignment resolvers", () => {
       subjectId: "subject-1",
       resolver: {
         id: "bad-service",
-        resolve: () => ({ variantId: "remote-only" }),
+        resolve: () =>
+          ({
+            decision: "assigned",
+            variantId: "remote-only",
+          }) as const,
       },
     });
     expect(assignment).toMatchObject({
       variantId: "control",
       source: "default",
       diagnostics: [{ code: "FS200" }],
+    });
+  });
+
+  it("renders an ineligible resolver value without treating it as an assignment", () => {
+    const assignment = resolveExperiment(definition, {
+      subjectId: "subject-1",
+      resolver: {
+        id: "targeting-service",
+        resolve: () =>
+          ({
+            decision: "ineligible",
+            variantId: "control",
+            diagnostics: [
+              {
+                code: "TARGETING_MISMATCH",
+                message: "Subject did not match the targeting rule.",
+              },
+            ],
+          }) as const,
+      },
+    });
+    expect(assignment).toMatchObject({
+      variantId: "control",
+      source: "default",
+      resolverId: "targeting-service",
+      diagnostics: [{ code: "TARGETING_MISMATCH" }],
+    });
+  });
+
+  it("keeps coverage and targeting exclusions distinguishable", async () => {
+    const resolveExcluded = (
+      code: "COVERAGE_EXCLUDED" | "TARGETING_MISMATCH",
+    ) =>
+      resolveExperiment(definition, {
+        subjectId: "subject-1",
+        resolver: {
+          id: "reasoned-service",
+          resolve: () =>
+            ({
+              decision: "ineligible",
+              variantId: "control",
+              diagnostics: [{ code, message: code }],
+            }) as const,
+        },
+      });
+
+    expect(
+      (await resolveExcluded("COVERAGE_EXCLUDED")).diagnostics?.[0]?.code,
+    ).toBe("COVERAGE_EXCLUDED");
+    expect(
+      (await resolveExcluded("TARGETING_MISMATCH")).diagnostics?.[0]?.code,
+    ).toBe("TARGETING_MISMATCH");
+  });
+
+  it("defensively diagnoses an ineligible runtime result without a reason", async () => {
+    const assignment = await resolveExperiment(definition, {
+      subjectId: "subject-1",
+      resolver: {
+        id: "untyped-service",
+        resolve: () =>
+          ({
+            decision: "ineligible",
+            variantId: "control",
+            diagnostics: [],
+          }) as unknown as ReturnType<AssignmentResolver["resolve"]>,
+      },
+    });
+
+    expect(assignment).toMatchObject({
+      source: "default",
+      diagnostics: [{ code: "FS203" }],
     });
   });
 

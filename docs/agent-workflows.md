@@ -2,7 +2,7 @@
 
 Install the versioned repository skill with `npx @facet-smith/cli init`. It writes `.agents/skills/facetsmith/SKILL.md` and refuses to replace local changes unless `--force` is explicit. Commit the installed skill when the repository team wants every compatible coding agent to discover the same FacetSmith guidance.
 
-Before editing, run `npx @facet-smith/cli check --json` and read `npx @facet-smith/cli manifest`. These provide the machine-readable experiment topology, immutable identities, and exact source locations without executing application code. Run the check again after editing; completion requires an error-free manifest plus the host application's type, behavior, accessibility, and viewport checks.
+Before editing, run `npx @facet-smith/cli check --json` and read `npx @facet-smith/cli manifest`. When the repository commits a manifest, also run `npx @facet-smith/cli manifest --check <path>` so identity changes are compared with the previous snapshot. These provide the machine-readable experiment topology, immutable identities, and exact source locations without executing application code. Run the checks again after editing; completion requires an error-free, drift-reviewed manifest plus the host application's type, behavior, accessibility, and viewport checks.
 
 A coding agent adding a variant must:
 

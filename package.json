@@ -20,6 +20,7 @@
     "dev": "corepack pnpm -r --filter @facet-smith/next-app^... --if-present build && corepack pnpm --filter @facet-smith/next-app dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "integrity:check": "corepack pnpm --filter @facet-smith/cli build && node packages/cli/dist/cli.js check --cwd . && node packages/cli/dist/cli.js manifest --cwd . --check facetsmith.manifest.json",
     "lint": "eslint . --max-warnings 0 && prettier --check .",
     "release:check": "corepack pnpm build && node scripts/release-check.mjs",
     "typecheck": "corepack pnpm -r --if-present typecheck",

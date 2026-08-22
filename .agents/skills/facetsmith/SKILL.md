@@ -41,9 +41,12 @@ Do not add packages the application does not need. Do not introduce a FacetSmith
 - Pass an `AssignmentResolver` as the second argument to `createClientExperiment()` or `createNextExperiment()` when the application or flag platform owns assignment.
 - Keep `resolver.id` a static URL-safe string literal so the integrity manifest records assignment identity.
 - Treat source variant IDs as authoritative. A resolver-returned unknown ID, failure, or timeout renders the unexposed default with a stable diagnostic.
+- Return `decision: "assigned"` only for exposure-eligible vendor assignments. Return `decision: "ineligible"` with a declared variant and at least one stable diagnostic reason for targeting, coverage, forced, or disabled outcomes; ineligible content never emits exposure.
 - Preserve the synchronous path for synchronous resolvers. Await server resolution; let the React factory manage async client fallback.
+- Prefer server-resolved vendor adapters. A deliberately async client resolver must pass an explicit `{ fallback: Component }` or `{ fallback: null }` as the third client-factory argument.
 - Pass targeting data through resolver attributes as opaque application data. Keep vendor SDKs in application adapters, not FacetSmith packages.
 - Map experiment iteration into the vendor key or context. Changing that mapping or resolver requires a new iteration.
+- For GrowthBook, use `@facet-smith/growthbook` on the server, configure the generated iteration-scoped feature key, keep GrowthBook tracking callbacks disabled, and pass a first-party anonymous cookie as FacetSmith `subjectId`. The adapter rejects sticky-bucket experiment keys that omit iteration.
 
 ## Use the correct rendering boundary
 
@@ -55,11 +58,13 @@ For Next.js Server Components, prefer `createNextExperiment<Props>()(...)` and u
 
 Run `facetsmith check --json` before and after changing experiments. Read `facetsmith manifest` when locating definitions or coordinating multiple variants. Keep identity, revisions, resolver IDs, and any source allocation as static literals so the CLI can inspect them without executing application code. Resolve every `FS100`, `FS101`, `FS102`, and `FS103` diagnostic before completion.
 
+When the repository commits a manifest, run `facetsmith manifest --check <path>` and treat drift as a review gate. Regenerate schema-v1 manifests with the current CLI so resolver identity participates in cross-release comparison.
+
 Reading subject or override cookies makes personalized Next.js routes request-time rendered. Never place subject-specific HTML in a shared full-page cache. Cache invariant data outside the personalized boundary.
 
 ## Report exposure correctly
 
-Assignment is a pure decision; it is not evidence that a user saw a variant. Missing-subject and resolver-failure defaults never emit exposure. Send analytics through an `ExperimentAnalyticsAdapter` and preserve FacetSmith's visible-render exposure semantics and provider-lifetime deduplication. Use `useExposedExperiments()` at an application's analytics boundary to attach visible experiment identities to its existing events; do not invent a FacetSmith-specific event vocabulary or treat unexposed assignments as attribution. The host application remains responsible for consent, transport, retries, conversion definitions, bot policy, sample-ratio checks, and statistical analysis.
+Assignment is a pure decision; it is not evidence that a user saw a variant. Missing-subject, ineligible, and resolver-failure results never emit exposure. Send analytics through an `ExperimentAnalyticsAdapter` and preserve FacetSmith's visible-render exposure semantics and provider-lifetime deduplication. Use `useExposedExperiments()` at an application's analytics boundary to attach visible experiment identities to its existing events; do not invent a FacetSmith-specific event vocabulary or treat unexposed assignments as attribution. The host application remains responsible for consent, transport, retries, conversion definitions, bot policy, sample-ratio checks, and statistical analysis.
 
 Do not infer or declare a winner from exposure events alone.
 

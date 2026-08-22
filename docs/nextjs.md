@@ -73,3 +73,5 @@ The example treats URL overrides as developer overrides and the reserved cookie 
 ## SSR, caching, and hydration
 
 Pass the server assignment through `initialAssignments` when the same experiment has a client boundary. A matching experiment ID, iteration, variant, revision, and resolver identity is reused during hydration. Reading request cookies makes that route dynamic; never place personalized output in a shared full-page cache. Static data can still be fetched/cached outside this request-specific resolution. Streaming does not permit setting cookies during Server Component render, which is why all mutations use a route handler.
+
+Vendor adapters should follow the same server-first path: initialize their SDK before render, resolve and await the assignment in the Server Component, then hydrate the canonical result. `@facet-smith/growthbook` implements this pattern and does not introduce a client-side async assignment path.

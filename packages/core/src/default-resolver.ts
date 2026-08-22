@@ -27,8 +27,9 @@ export const defaultAssignmentResolver = Object.freeze({
     const orderedVariants = [...request.variantIds].sort();
     for (const variantId of orderedVariants) {
       cumulative += request.allocation[variantId] ?? 0;
-      if (bucket < cumulative) return { variantId, bucket };
+      if (bucket < cumulative)
+        return { decision: "assigned", variantId, bucket };
     }
-    return { variantId: request.defaultVariant };
+    return { decision: "assigned", variantId: request.defaultVariant };
   },
 } satisfies AssignmentResolver<AssignmentResolverResult>);

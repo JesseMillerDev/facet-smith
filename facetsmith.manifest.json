@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 2,
+  "experiments": [
+    {
+      "id": "confidence-note",
+      "iteration": "launch-1",
+      "defaultVariant": "numbers",
+      "variants": {
+        "numbers": {
+          "revision": "1"
+        },
+        "promise": {
+          "revision": "1"
+        }
+      },
+      "allocation": {
+        "numbers": 0.5,
+        "promise": 0.5
+      },
+      "resolverId": "facetsmith-fnv1a",
+      "source": {
+        "file": "examples/next-app/app/experiments/client-experiments.tsx",
+        "line": 9,
+        "column": 20
+      }
+    },
+    {
+      "id": "custom-client-banner",
+      "iteration": "external-service-1",
+      "defaultVariant": "control",
+      "variants": {
+        "control": {
+          "revision": "1"
+        },
+        "express": {
+          "revision": "1"
+        }
+      },
+      "resolverId": "example-external-service",
+      "source": {
+        "file": "examples/custom-resolver/src/client-example.tsx",
+        "line": 6,
+        "column": 22
+      }
+    },
+    {
+      "id": "custom-server-banner",
+      "iteration": "external-service-1",
+      "defaultVariant": "control",
+      "variants": {
+        "control": {
+          "revision": "1"
+        },
+        "express": {
+          "revision": "1"
+        }
+      },
+      "resolverId": "example-external-service",
+      "source": {
+        "file": "examples/custom-resolver/src/server-example.tsx",
+        "line": 4,
+        "column": 29
+      }
+    },
+    {
+      "id": "pricing-hero",
+      "iteration": "launch-1",
+      "defaultVariant": "control",
+      "variants": {
+        "control": {
+          "revision": "1"
+        },
+        "concise": {
+          "revision": "1"
+        },
+        "split": {
+          "revision": "1"
+        }
+      },
+      "allocation": {
+        "control": 0.34,
+        "concise": 0.33,
+        "split": 0.33
+      },
+      "salt": "example-v1",
+      "resolverId": "facetsmith-fnv1a",
+      "source": {
+        "file": "examples/next-app/app/experiments/client-experiments.tsx",
+        "line": 96,
+        "column": 28
+      }
+    },
+    {
+      "id": "server-card",
+      "iteration": "launch-1",
+      "defaultVariant": "technical",
+      "variants": {
+        "technical": {
+          "revision": "1"
+        },
+        "narrative": {
+          "revision": "1"
+        }
+      },
+      "allocation": {
+        "technical": 0.5,
+        "narrative": 0.5
+      },
+      "salt": "example-v1",
+      "resolverId": "facetsmith-fnv1a",
+      "source": {
+        "file": "examples/next-app/app/experiments/server-experiment.tsx",
+        "line": 43,
+        "column": 27
+      }
+    }
+  ]
+}

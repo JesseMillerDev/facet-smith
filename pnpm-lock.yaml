@@ -142,6 +142,16 @@ importers:
 
   packages/core: {}
 
+  packages/growthbook:
+    dependencies:
+      '@facet-smith/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@growthbook/growthbook':
+        specifier: 1.7.0
+        version: 1.7.0
+
   packages/inspector:
     dependencies:
       '@facet-smith/core':
@@ -574,6 +584,10 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
+
+  '@growthbook/growthbook@1.7.0':
+    resolution: {integrity: sha512-Vmad3fWRh1XaFH4q+AS62ofX6Q3IxSTD7sBGuhEHCaad8VyZerxrVdojucjzlnJDUocfrnZFUSpEkR6R/wCV+A==}
+    engines: {node: '>=10'}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -1417,6 +1431,10 @@ packages:
 
   dom-accessibility-api@0.6.3:
     resolution: {integrity: sha512-7ZgogeTnjuHbo+ct10G9Ffp0mif17idi0IyWNVA/wcwcm7NPOD/WEHVP3n7n3MhXqxoIYm8d6MuZohYWIZ4T3w==}
+
+  dom-mutator@0.6.0:
+    resolution: {integrity: sha512-iCt9o0aYfXMUkz/43ZOAUFQYotjGB+GNbYJiJdz4TgXkyToXbbRy5S6FbTp72lRBtfpUMwEc1KmpFEU4CZeoNg==}
+    engines: {node: '>=10'}
 
   electron-to-chromium@1.5.411:
     resolution: {integrity: sha512-gglkxzokjHfawpGxq75XdBV2/l3BAPzrsMs70qgaZdTW5rpV1tC4MdgJVP9fN126bODA4ZJQkn1wryEzJyQXIg==}
@@ -2908,6 +2926,10 @@ snapshots:
 
   '@exodus/bytes@1.15.1': {}
 
+  '@growthbook/growthbook@1.7.0':
+    dependencies:
+      dom-mutator: 0.6.0
+
   '@humanfs/core@0.19.2':
     dependencies:
       '@humanfs/types': 0.15.0
@@ -3603,6 +3625,8 @@ snapshots:
   dom-accessibility-api@0.5.16: {}
 
   dom-accessibility-api@0.6.3: {}
+
+  dom-mutator@0.6.0: {}
 
   electron-to-chromium@1.5.411: {}
 

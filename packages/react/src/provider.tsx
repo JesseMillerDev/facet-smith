@@ -29,12 +29,16 @@ import {
   useState,
 } from "react";
 import { ExperimentContext, type ExperimentRuntime } from "./context";
-import type { ExperimentProviderProps, RegisteredExperiment } from "./types";
+import type {
+  ExperimentProviderProps,
+  InitialAssignment,
+  RegisteredExperiment,
+} from "./types";
 
 export const OVERRIDE_STORAGE_KEY = "__facetsmith-overrides";
 export const SERVER_REFRESH_EVENT = "facetsmith:server-refresh";
 const EMPTY_OVERRIDES: ExperimentOverrides = Object.freeze({});
-const EMPTY_ASSIGNMENTS: Readonly<Record<string, AssignmentResult>> =
+const EMPTY_ASSIGNMENTS: Readonly<Record<string, InitialAssignment>> =
   Object.freeze({});
 const EMPTY_EXPERIMENT_ATTRIBUTION: readonly ExperimentAttribution[] =
   Object.freeze([]);
@@ -78,6 +82,23 @@ export function ExperimentProvider({
     (inspector.environment !== "production" ||
       inspector.allowInProduction === true),
   );
+  const canonicalInitialAssignments = useMemo<
+    Readonly<Record<string, AssignmentResult>>
+  >(
+    () =>
+      Object.fromEntries(
+        Object.entries(initialAssignments).map(([experimentId, assignment]) => [
+          experimentId,
+          assignment.resolverId === undefined
+            ? {
+                ...assignment,
+                resolverId: DEFAULT_ASSIGNMENT_RESOLVER_ID,
+              }
+            : assignment,
+        ]),
+      ),
+    [initialAssignments],
+  );
   const [browserOverrides, setBrowserOverrides] =
     useState<ExperimentOverrides>(developerOverrides);
   const [resetOverrides, setResetOverrides] = useState<ReadonlySet<string>>(
@@ -101,7 +122,7 @@ export function ExperimentProvider({
       assignmentAttributes,
       assignmentTimeoutMs,
       effectiveOverrides,
-      initialAssignments,
+      initialAssignments: canonicalInitialAssignments,
       environment: inspector?.environment,
       qaOverrides,
       subjectId,
@@ -110,7 +131,7 @@ export function ExperimentProvider({
       assignmentAttributes,
       assignmentTimeoutMs,
       effectiveOverrides,
-      initialAssignments,
+      canonicalInitialAssignments,
       inspector?.environment,
       qaOverrides,
       subjectId,
@@ -192,7 +213,7 @@ export function ExperimentProvider({
               resolver,
             });
       }
-      const initial = initialAssignments[definition.id];
+      const initial = canonicalInitialAssignments[definition.id];
       if (
         initial &&
         initial.experimentId === definition.id &&
@@ -200,9 +221,7 @@ export function ExperimentProvider({
         Object.hasOwn(definition.variants, initial.variantId) &&
         definition.variants[initial.variantId]?.revision ===
           initial.variantRevision &&
-        (initial.resolverId === resolverId ||
-          (initial.resolverId === undefined &&
-            resolverId === DEFAULT_ASSIGNMENT_RESOLVER_ID))
+        initial.resolverId === resolverId
       ) {
         return initial as AssignmentResult<keyof TVariants & string>;
       }
@@ -236,7 +255,7 @@ export function ExperimentProvider({
       assignmentAttributes,
       assignmentTimeoutMs,
       effectiveOverrides,
-      initialAssignments,
+      canonicalInitialAssignments,
       inspector?.environment,
       qaOverrides,
       resolutionCacheScope,
@@ -404,7 +423,7 @@ export function ExperimentProvider({
       ...(subjectId === undefined ? {} : { subjectId }),
       overrides: effectiveOverrides,
       qaOverrides,
-      initialAssignments,
+      initialAssignments: canonicalInitialAssignments,
       inspectorEnabled,
       registrations,
       attribution,
@@ -418,7 +437,7 @@ export function ExperimentProvider({
       effectiveOverrides,
       expose,
       attribution,
-      initialAssignments,
+      canonicalInitialAssignments,
       inspectorEnabled,
       qaOverrides,
       register,

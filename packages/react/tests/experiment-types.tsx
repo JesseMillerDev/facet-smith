@@ -47,3 +47,27 @@ void Explicit;
 // @ts-expect-error The explicit shared contract requires name.
 const missingExplicitProps: ComponentProps<typeof Explicit> = {};
 void [explicitProps, missingExplicitProps];
+
+const asyncResolver = {
+  id: "typed-async-resolver",
+  resolve: async () => ({
+    decision: "assigned" as const,
+    variantId: "control",
+  }),
+};
+
+createClientExperiment<SharedProps>()(
+  {
+    id: "typed-fallback",
+    iteration: "launch-1",
+    defaultVariant: "control",
+    variants: {
+      control: {
+        revision: "1",
+        component: ({ name }: SharedProps) => <p>{name}</p>,
+      },
+    },
+  },
+  asyncResolver,
+  { fallback: ({ name }: SharedProps) => <p>Loading {name}</p> },
+);

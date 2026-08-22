@@ -25,6 +25,7 @@ describe("analytics adapters", () => {
         variantId: "control",
         variantRevision: "1",
         source: "deterministic",
+        resolverId: "facetsmith-fnv1a",
         bucket: 0.42,
       }),
     ).toEqual({

@@ -23,12 +23,17 @@ export type Allocation<TVariant extends string = string> = Readonly<
   Record<TVariant, number>
 >;
 
-export type AssignmentDiagnosticCode = "FS200" | "FS201" | "FS202";
+export type AssignmentDiagnosticCode = "FS200" | "FS201" | "FS202" | "FS203";
 
 export interface AssignmentDiagnostic {
   readonly code: AssignmentDiagnosticCode | (string & {});
   readonly message: string;
 }
+
+export type AssignmentDiagnostics = readonly [
+  AssignmentDiagnostic,
+  ...AssignmentDiagnostic[],
+];
 
 export interface AssignmentRequest<TVariant extends string = string> {
   readonly experimentId: string;
@@ -45,11 +50,24 @@ export interface AssignmentRequest<TVariant extends string = string> {
   readonly signal: AbortSignal;
 }
 
-export interface AssignmentResolverResult<TVariant extends string = string> {
+export interface AssignedResolverResult<TVariant extends string = string> {
+  readonly decision: "assigned";
   readonly variantId: TVariant;
   readonly bucket?: number;
   readonly diagnostics?: readonly AssignmentDiagnostic[];
 }
+
+export interface IneligibleResolverResult<TVariant extends string = string> {
+  readonly decision: "ineligible";
+  /** The source-defined variant to render without recording an exposure. */
+  readonly variantId: TVariant;
+  /** A stable reason code is required so non-assignment is observable. */
+  readonly diagnostics: AssignmentDiagnostics;
+}
+
+export type AssignmentResolverResult<TVariant extends string = string> =
+  | AssignedResolverResult<TVariant>
+  | IneligibleResolverResult<TVariant>;
 
 export interface AssignmentResolver<
   TResult extends
@@ -77,8 +95,8 @@ export interface AssignmentResult<TVariant extends string = string> {
   readonly variantId: TVariant;
   readonly variantRevision: string;
   readonly source: AssignmentSource;
-  /** Always populated by FacetSmith; optional for legacy pre-resolved assignments. */
-  readonly resolverId?: string;
+  /** Always populated by FacetSmith. Legacy hydration input is normalized at ingress. */
+  readonly resolverId: string;
   readonly diagnostics?: readonly AssignmentDiagnostic[];
   readonly bucket?: number;
 }

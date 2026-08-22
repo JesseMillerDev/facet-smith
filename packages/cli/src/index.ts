@@ -49,6 +49,7 @@ interface ParsedArguments {
   readonly cwd?: string;
   readonly force?: boolean;
   readonly check?: boolean;
+  readonly manifestPath?: string;
   readonly json?: boolean;
   readonly message?: string;
 }
@@ -58,11 +59,11 @@ const help = `FacetSmith CLI
 Usage:
   facetsmith init [--cwd <path>] [--check] [--force]
   facetsmith check [--cwd <path>] [--json]
-  facetsmith manifest [--cwd <path>]
+  facetsmith manifest [--cwd <path>] [--check <manifest.json>]
 
 Options:
   --cwd <path>  Install relative to this project directory
-  --check       Verify the packaged skill is already installed
+  --check       Verify the packaged skill, or compare a committed manifest
   --force       Replace a locally modified FacetSmith skill
   --json        Emit stable machine-readable diagnostics
   --help        Show this help
@@ -132,6 +133,7 @@ function parseArguments(argv: readonly string[]): ParsedArguments {
   let cwd: string | undefined;
   let force = false;
   let check = false;
+  let manifestPath: string | undefined;
   let json = false;
   for (let index = 1; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -141,10 +143,20 @@ function parseArguments(argv: readonly string[]): ParsedArguments {
       }
       force = true;
     } else if (argument === "--check") {
-      if (command !== "init") {
+      if (command === "manifest") {
+        manifestPath = argv[index + 1];
+        if (!manifestPath || manifestPath.startsWith("--")) {
+          return {
+            kind: "error",
+            message: "manifest --check requires a JSON path",
+          };
+        }
+        index += 1;
+      } else if (command !== "init") {
         return { kind: "error", message: `Unknown option: ${argument}` };
+      } else {
+        check = true;
       }
-      check = true;
     } else if (argument === "--json") {
       if (command !== "check") {
         return { kind: "error", message: `Unknown option: ${argument}` };
@@ -170,6 +182,7 @@ function parseArguments(argv: readonly string[]): ParsedArguments {
     ...(cwd ? { cwd } : {}),
     ...(force ? { force: true } : {}),
     ...(check ? { check: true } : {}),
+    ...(manifestPath ? { manifestPath } : {}),
     ...(json ? { json: true } : {}),
   };
 }
@@ -193,9 +206,56 @@ export function runCli(
     if (parsed.kind === "check" || parsed.kind === "manifest") {
       const result = scanExperimentSources(parsed.cwd);
       if (parsed.kind === "manifest") {
-        if (result.valid) output.log(JSON.stringify(result.manifest, null, 2));
-        else output.error(JSON.stringify(result, null, 2));
-        return result.valid ? 0 : 1;
+        if (!result.valid) {
+          output.error(JSON.stringify(result, null, 2));
+          return 1;
+        }
+        if (!parsed.manifestPath) {
+          output.log(JSON.stringify(result.manifest, null, 2));
+          return 0;
+        }
+
+        const projectDirectory = resolve(parsed.cwd ?? process.cwd());
+        const manifestPath = resolve(projectDirectory, parsed.manifestPath);
+        if (!existsSync(manifestPath)) {
+          output.error(
+            `Committed FacetSmith manifest is missing: ${manifestPath}`,
+          );
+          return 1;
+        }
+        let committed: unknown;
+        try {
+          committed = JSON.parse(readFileSync(manifestPath, "utf8"));
+        } catch (error) {
+          output.error(
+            `Could not read committed FacetSmith manifest: ${error instanceof Error ? error.message : String(error)}`,
+          );
+          return 1;
+        }
+        const schemaVersion =
+          committed && typeof committed === "object"
+            ? (committed as { readonly schemaVersion?: unknown }).schemaVersion
+            : undefined;
+        if (schemaVersion === 1) {
+          output.error(
+            "Committed FacetSmith manifest uses schema v1. Regenerate it with `facetsmith manifest`; schema v2 records resolver identity.",
+          );
+          return 1;
+        }
+        if (schemaVersion !== 2) {
+          output.error(
+            `Committed FacetSmith manifest has unsupported schema version ${String(schemaVersion)}; expected 2.`,
+          );
+          return 1;
+        }
+        if (JSON.stringify(committed) !== JSON.stringify(result.manifest)) {
+          output.error(
+            `FacetSmith manifest drift detected: ${manifestPath}. Regenerate it with \`facetsmith manifest\` and review the identity changes.`,
+          );
+          return 1;
+        }
+        output.log(`FacetSmith manifest check passed: ${manifestPath}`);
+        return 0;
       }
       if (parsed.json) {
         output.log(JSON.stringify(result));

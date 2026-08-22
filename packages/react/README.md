@@ -47,7 +47,7 @@ export function App() {
 
 The explicit generic is the shared prop contract every variant must accept. Direct calls remain supported and infer the safe intersection of variant props. The runtime distinguishes assignment from actual visible exposure, supports iteration-matched server assignments, and safely renders the default without a provider. The optional inspector is a separate package and is not required in production bundles.
 
-Pass an `AssignmentResolver` as the factory's second argument when an external flag platform owns assignment. Its allocation may be omitted from source. Async resolvers render an unexposed default while pending and never break the host application on failure. See the [resolver authoring guide](https://github.com/JesseMillerDev/facet-smith/blob/main/docs/assignment-resolvers.md).
+Pass an `AssignmentResolver` as the factory's second argument when an external flag platform owns assignment. Its allocation may be omitted from source. Prefer server-resolved vendor integration. A deliberately async client resolver must pass an explicit `{ fallback: Component }` or `{ fallback: null }` as the third factory argument; otherwise FacetSmith renders nothing and warns in development. See the [resolver authoring guide](https://github.com/JesseMillerDev/facet-smith/blob/main/docs/assignment-resolvers.md).
 
 Use visibility-qualified experiment attribution at the application's existing
 analytics boundary:

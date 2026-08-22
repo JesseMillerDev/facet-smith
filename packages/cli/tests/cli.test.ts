@@ -112,6 +112,72 @@ describe("FacetSmith integrity commands", () => {
     ]);
   });
 
+  it("checks a committed manifest and reports identity drift", () => {
+    const projectDirectory = temporaryProject();
+    const sourceDirectory = join(projectDirectory, "src");
+    mkdirSync(sourceDirectory);
+    const sourcePath = join(sourceDirectory, "hero.ts");
+    writeFileSync(
+      sourcePath,
+      `
+        import { defineExperiment } from "@facet-smith/core";
+        defineExperiment({
+          id: "hero",
+          iteration: "launch-1",
+          defaultVariant: "control",
+          variants: { control: { revision: "1" } },
+          allocation: { control: 1 },
+        });
+      `,
+    );
+    const manifestPath = join(projectDirectory, "facetsmith.manifest.json");
+    writeFileSync(
+      manifestPath,
+      JSON.stringify(scanExperimentSources(projectDirectory).manifest, null, 2),
+    );
+    const logs: string[] = [];
+    const errors: string[] = [];
+
+    expect(
+      runCli(["manifest", "--cwd", projectDirectory, "--check", manifestPath], {
+        log: (message) => logs.push(message),
+        error: (message) => errors.push(message),
+      }),
+    ).toBe(0);
+    expect(logs.join("\n")).toContain("manifest check passed");
+    expect(errors).toEqual([]);
+
+    writeFileSync(
+      sourcePath,
+      readFileSync(sourcePath, "utf8").replace("launch-1", "launch-2"),
+    );
+    expect(
+      runCli(["manifest", "--cwd", projectDirectory, "--check", manifestPath], {
+        log: (message) => logs.push(message),
+        error: (message) => errors.push(message),
+      }),
+    ).toBe(1);
+    expect(errors.at(-1)).toContain("manifest drift detected");
+  });
+
+  it("gives a targeted migration message for a schema-v1 manifest", () => {
+    const projectDirectory = temporaryProject();
+    const manifestPath = join(projectDirectory, "facetsmith.manifest.json");
+    writeFileSync(
+      manifestPath,
+      JSON.stringify({ schemaVersion: 1, experiments: [] }),
+    );
+    const errors: string[] = [];
+
+    expect(
+      runCli(["manifest", "--cwd", projectDirectory, "--check", manifestPath], {
+        log: () => undefined,
+        error: (message) => errors.push(message),
+      }),
+    ).toBe(1);
+    expect(errors).toEqual([expect.stringContaining("schema v1")]);
+  });
+
   it("records a custom resolver and permits resolver-owned allocation", () => {
     const projectDirectory = temporaryProject();
     const sourceDirectory = join(projectDirectory, "src");
@@ -122,7 +188,7 @@ describe("FacetSmith integrity commands", () => {
         import { createClientExperiment } from "@facet-smith/react";
         const resolver = {
           id: "application-flags",
-          resolve: () => ({ variantId: "control" }),
+          resolve: () => ({ decision: "assigned", variantId: "control" }),
         } as const;
         createClientExperiment({
           id: "custom-hero",
@@ -173,7 +239,7 @@ describe("FacetSmith integrity commands", () => {
           iteration: "launch-1",
           defaultVariant: "control",
           variants: { control: { revision: "1", component: () => null } },
-        }, { id: dynamicId, resolve: () => ({ variantId: "control" }) });
+        }, { id: dynamicId, resolve: () => ({ decision: "assigned", variantId: "control" }) });
       `,
     );
 

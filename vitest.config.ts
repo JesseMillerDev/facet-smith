@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@facet-smith/core": source("./packages/core/src/index.ts"),
+      "@facet-smith/growthbook": source("./packages/growthbook/src/index.ts"),
       "@facet-smith/analytics": source("./packages/analytics/src/index.ts"),
       "@facet-smith/react": source("./packages/react/src/index.ts"),
       "@facet-smith/react/markers": source("./packages/react/src/markers.ts"),
