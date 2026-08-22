@@ -1,6 +1,6 @@
 {
   "name": "@facet-smith/analytics",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Vendor-neutral exposure analytics adapters for FacetSmith",
   "license": "MIT",
   "author": "Jesse Miller",
