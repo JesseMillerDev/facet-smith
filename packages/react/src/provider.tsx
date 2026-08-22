@@ -3,11 +3,13 @@
 import {
   applyOverridesToUrl,
   createExperimentDefinitionRegistry,
+  DEFAULT_ASSIGNMENT_RESOLVER_ID,
   OVERRIDE_QUERY_PARAMETER,
   parseOverrides,
   resolveExperiment,
   serializeOverrides,
   type AssignmentResult,
+  type AssignmentResolver,
   type ExperimentDefinition,
   type ExperimentOverrides,
   type VariantMetadata,
@@ -61,6 +63,8 @@ function safeUrlOverrides(): ExperimentOverrides {
 export function ExperimentProvider({
   children,
   subjectId,
+  assignmentAttributes,
+  assignmentTimeoutMs,
   initialAssignments = EMPTY_ASSIGNMENTS,
   developerOverrides = EMPTY_OVERRIDES,
   qaOverrides = EMPTY_OVERRIDES,
@@ -92,6 +96,35 @@ export function ExperimentProvider({
   >([]);
   const exposed = useRef(new Set<string>());
   const definitionRegistry = useRef(createExperimentDefinitionRegistry());
+  const resolutionCacheScope = useMemo(
+    () => ({
+      assignmentAttributes,
+      assignmentTimeoutMs,
+      effectiveOverrides,
+      initialAssignments,
+      environment: inspector?.environment,
+      qaOverrides,
+      subjectId,
+    }),
+    [
+      assignmentAttributes,
+      assignmentTimeoutMs,
+      effectiveOverrides,
+      initialAssignments,
+      inspector?.environment,
+      qaOverrides,
+      subjectId,
+    ],
+  );
+  const resolutionCaches = useRef(
+    new WeakMap<
+      object,
+      WeakMap<
+        object,
+        WeakMap<object, AssignmentResult | Promise<AssignmentResult>>
+      >
+    >(),
+  );
   const [exposedState, setExposedState] = useState<ExposedExperimentState>(
     () => ({ subjectId, exposures: EMPTY_EXPERIMENT_ATTRIBUTION }),
   );
@@ -126,19 +159,38 @@ export function ExperimentProvider({
   const resolve = useCallback(
     <TVariants extends Record<string, VariantMetadata>>(
       definition: ExperimentDefinition<TVariants>,
-    ): AssignmentResult<keyof TVariants & string> => {
-      definitionRegistry.current.register(definition);
+      resolver?: AssignmentResolver,
+    ):
+      | AssignmentResult<keyof TVariants & string>
+      | Promise<AssignmentResult<keyof TVariants & string>> => {
+      definitionRegistry.current.register(definition, resolver);
+      const resolverId = resolver?.id ?? DEFAULT_ASSIGNMENT_RESOLVER_ID;
+      const coreOptions = {
+        ...(subjectId === undefined ? {} : { subjectId }),
+        qaOverrides,
+        ...(assignmentAttributes === undefined
+          ? {}
+          : { attributes: assignmentAttributes }),
+        ...(assignmentTimeoutMs === undefined
+          ? {}
+          : { timeoutMs: assignmentTimeoutMs }),
+        mode:
+          inspector?.environment === "production"
+            ? ("production" as const)
+            : ("development" as const),
+      };
       const browserOverride = effectiveOverrides[definition.id];
       if (browserOverride !== undefined) {
-        return resolveExperiment(definition, {
-          ...(subjectId === undefined ? {} : { subjectId }),
+        const overrideOptions = {
+          ...coreOptions,
           developerOverrides: { [definition.id]: browserOverride },
-          qaOverrides,
-          mode:
-            inspector?.environment === "production"
-              ? "production"
-              : "development",
-        });
+        };
+        return resolver === undefined
+          ? resolveExperiment(definition, overrideOptions)
+          : resolveExperiment(definition, {
+              ...overrideOptions,
+              resolver,
+            });
       }
       const initial = initialAssignments[definition.id];
       if (
@@ -147,24 +199,47 @@ export function ExperimentProvider({
         initial.experimentIteration === definition.iteration &&
         Object.hasOwn(definition.variants, initial.variantId) &&
         definition.variants[initial.variantId]?.revision ===
-          initial.variantRevision
+          initial.variantRevision &&
+        (initial.resolverId === resolverId ||
+          (initial.resolverId === undefined &&
+            resolverId === DEFAULT_ASSIGNMENT_RESOLVER_ID))
       ) {
         return initial as AssignmentResult<keyof TVariants & string>;
       }
-      return resolveExperiment(definition, {
-        ...(subjectId === undefined ? {} : { subjectId }),
-        qaOverrides,
-        mode:
-          inspector?.environment === "production"
-            ? "production"
-            : "development",
+      if (resolver === undefined)
+        return resolveExperiment(definition, coreOptions);
+
+      let resolutionCache = resolutionCaches.current.get(resolutionCacheScope);
+      if (!resolutionCache) {
+        resolutionCache = new WeakMap();
+        resolutionCaches.current.set(resolutionCacheScope, resolutionCache);
+      }
+      let resolverCache = resolutionCache.get(definition);
+      if (!resolverCache) {
+        resolverCache = new WeakMap();
+        resolutionCache.set(definition, resolverCache);
+      }
+      const cached = resolverCache.get(resolver);
+      if (cached) {
+        return cached as
+          | AssignmentResult<keyof TVariants & string>
+          | Promise<AssignmentResult<keyof TVariants & string>>;
+      }
+      const assignment = resolveExperiment(definition, {
+        ...coreOptions,
+        resolver,
       });
+      resolverCache.set(resolver, assignment);
+      return assignment;
     },
     [
+      assignmentAttributes,
+      assignmentTimeoutMs,
       effectiveOverrides,
       initialAssignments,
       inspector?.environment,
       qaOverrides,
+      resolutionCacheScope,
       subjectId,
     ],
   );

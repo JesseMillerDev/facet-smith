@@ -67,7 +67,7 @@ export function ExperimentBoundary({
 
   useEffect(() => {
     const marker = markerRef.current;
-    if (!expose || !marker) return;
+    if (!expose || !marker || assignment.source === "default") return;
     let emitted = false;
     const emit = () => {
       if (emitted) return;

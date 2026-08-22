@@ -37,6 +37,38 @@ describe("Next.js server integration", () => {
     });
   });
 
+  it("resolves custom synchronous and asynchronous server assignments", async () => {
+    const resolverDefinition = {
+      id: "custom-server-card",
+      iteration: "launch-1",
+      defaultVariant: "plain",
+      variants: {
+        plain: { revision: "1", component: () => "Plain" },
+        vivid: { revision: "1", component: () => "Vivid" },
+      },
+    } as const;
+    const synchronous = createNextExperiment(resolverDefinition, {
+      id: "server-flags",
+      resolve: () => ({ variantId: "vivid" }),
+    });
+    expect(synchronous.resolve({ subjectId: "subject-1" })).toMatchObject({
+      variantId: "vivid",
+      source: "resolver",
+      resolverId: "server-flags",
+    });
+
+    const asynchronous = createNextExperiment(resolverDefinition, {
+      id: "async-server-flags",
+      resolve: async () => ({ variantId: "vivid" }),
+    });
+    await expect(
+      asynchronous.resolve({ subjectId: "subject-1" }),
+    ).resolves.toMatchObject({ variantId: "vivid", source: "resolver" });
+    await expect(
+      asynchronous.render(undefined, { subjectId: "subject-1" }),
+    ).resolves.not.toBeNull();
+  });
+
   it("reads encoded cookie overrides safely", () => {
     expect(
       readExperimentOverrideCookie({

@@ -1,0 +1,19 @@
+{
+  "name": "@facet-smith/custom-resolver-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@facet-smith/core": "workspace:*",
+    "@facet-smith/next": "workspace:*",
+    "@facet-smith/react": "workspace:*",
+    "react": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.7",
+    "typescript": "5.9.3"
+  }
+}

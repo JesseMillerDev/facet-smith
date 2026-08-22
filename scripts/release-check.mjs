@@ -45,7 +45,12 @@ const packages = [
   },
 ];
 const expectedRuntimeExports = {
-  "@facet-smith/core": ["defineExperiment", "resolveExperiment", "stableHash"],
+  "@facet-smith/core": [
+    "defaultAssignmentResolver",
+    "defineExperiment",
+    "resolveExperiment",
+    "stableHash",
+  ],
   "@facet-smith/analytics": [
     "InMemoryAnalyticsAdapter",
     "createConsoleAnalyticsAdapter",
@@ -358,7 +363,7 @@ console.log("CommonJS marker import passed.");
 
   writeFileSync(
     join(consumerDirectory, "type-smoke.ts"),
-    `import { defineExperiment, resolveExperiment, stableHash } from "@facet-smith/core";
+    `import { defaultAssignmentResolver, defineExperiment, resolveExperiment, stableHash, type AssignmentResolver } from "@facet-smith/core";
 import { InMemoryAnalyticsAdapter, toExperimentAttribution, type ExperimentAttribution } from "@facet-smith/analytics";
 import { ExperimentProvider, createClientExperiment, useExposedExperiments } from "@facet-smith/react";
 import { experimentMarkerSelector } from "@facet-smith/react/markers";
@@ -370,6 +375,7 @@ import { ExperimentInspector } from "@facet-smith/inspector";
 
 void [
   defineExperiment,
+  defaultAssignmentResolver,
   resolveExperiment,
   stableHash,
   InMemoryAnalyticsAdapter,
@@ -387,6 +393,12 @@ void [
   createExperimentProxy,
   ExperimentInspector,
 ];
+
+const customResolver = {
+  id: "release-check-resolver",
+  resolve: () => ({ variantId: "control" }),
+} as const satisfies AssignmentResolver;
+void customResolver;
 
 const attribution: ExperimentAttribution = {
   experimentId: "release-check",

@@ -3,6 +3,7 @@ import type {
   ExperimentExposureEvent,
 } from "@facet-smith/analytics";
 import type {
+  AssignmentResolver,
   AssignmentResult,
   ExperimentDefinition,
   ExperimentOverrides,
@@ -30,6 +31,8 @@ export interface InspectorConfiguration {
 export interface ExperimentProviderProps {
   readonly children: ReactNode;
   readonly subjectId?: string;
+  readonly assignmentAttributes?: Readonly<Record<string, unknown>>;
+  readonly assignmentTimeoutMs?: number;
   readonly initialAssignments?: Readonly<Record<string, AssignmentResult>>;
   readonly developerOverrides?: ExperimentOverrides;
   readonly qaOverrides?: ExperimentOverrides;
@@ -50,3 +53,5 @@ export interface RegisteredExperiment {
   readonly marker: HTMLElement;
   readonly renderingMode: "client" | "server";
 }
+
+export type ExperimentAssignmentResolver = AssignmentResolver;

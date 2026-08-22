@@ -9,7 +9,7 @@ FacetSmith is an agent-native, source-native A/B/N experimentation framework for
 
 > **Project status:** v0.1, suitable for evaluation and early adopters. The public packages are available from npm under the `@facet-smith/*` scope.
 
-Variants are ordinary reviewable source-code components with immutable identities. FacetSmith validates definitions, assigns a stable variant from an application-provided subject ID, records exposure only when rendered content becomes visible, and optionally exposes a non-production in-app inspector. It does **not** provide statistical analysis, remote flags, authentication, a database, injected markup, telemetry, or a hosted control plane.
+Variants are ordinary reviewable source-code components with immutable identities. FacetSmith validates definitions, delegates assignment through a pluggable resolver (using its original stable hash by default), records exposure only when assigned content becomes visible, and optionally exposes a non-production in-app inspector. It does **not** provide statistical analysis, remote flags, authentication, a database, injected markup, telemetry, or a hosted control plane.
 
 ## Install
 
@@ -48,7 +48,7 @@ npx @facet-smith/cli check --json
 npx @facet-smith/cli manifest
 ```
 
-Diagnostics have stable codes and source locations. The manifest records experiment, iteration, variant, revision, allocation, and source identity without importing or executing application code.
+Diagnostics have stable codes and source locations. The manifest records experiment, iteration, variant, revision, resolver, optional allocation, and source identity without importing or executing application code.
 
 ## Five-minute client experiment
 
@@ -174,11 +174,13 @@ the same stable subject/account identity.
 
 See [analytics.md](docs/analytics.md), including a dependency-free PostHog adapter example.
 
+Assignment can be delegated to an application-owned flag platform without adding vendor dependencies to FacetSmith. See [assignment-resolvers.md](docs/assignment-resolvers.md) and the typechecked `examples/custom-resolver` package.
+
 ## Revision semantics
 
 **A revision is an immutable analytics identity.** Once a variant has received traffic, any behavior-bearing implementation change must increment its revision. `pricing-hero / concise / revision 1` and revision 2 are deliberately distinct exposures and must not be silently combined.
 
-**An iteration is an immutable experimental-run identity.** Changing allocation, salt, eligibility, randomization unit, or assignment provider requires a new iteration. Iteration participates in deterministic bucketing and is carried through assignments, exposures, attribution, hydration, and manifests.
+**An iteration is an immutable experimental-run identity.** Changing allocation, salt, eligibility, randomization unit, resolver, or resolver-to-vendor key mapping requires a new iteration. Iteration participates in deterministic bucketing and is carried through assignments, exposures, attribution, hydration, and manifests.
 
 ## Production safety, SSR, and caching
 
@@ -191,20 +193,20 @@ See [analytics.md](docs/analytics.md), including a dependency-free PostHog adapt
 
 ## Packages
 
-| Package                  | Responsibility                                                      |
-| ------------------------ | ------------------------------------------------------------------- |
-| `@facet-smith/core`      | Validation, FNV-1a hashing, weighted resolution, override URLs      |
-| `@facet-smith/analytics` | Vendor-neutral exposure event contract and basic adapters           |
-| `@facet-smith/react`     | Provider, typed client factory, registry, visibility exposure       |
-| `@facet-smith/next`      | Server factory, request cookies, validated handler, router refresh  |
-| `@facet-smith/inspector` | Optional portal-based non-production overlay and toolbar            |
-| `@facet-smith/cli`       | Agent skill, source manifest, and machine-readable integrity checks |
+| Package                  | Responsibility                                                       |
+| ------------------------ | -------------------------------------------------------------------- |
+| `@facet-smith/core`      | Validation, resolver contract, default FNV assignment, override URLs |
+| `@facet-smith/analytics` | Vendor-neutral exposure event contract and basic adapters            |
+| `@facet-smith/react`     | Provider, typed client factory, registry, visibility exposure        |
+| `@facet-smith/next`      | Server factory, request cookies, validated handler, router refresh   |
+| `@facet-smith/inspector` | Optional portal-based non-production overlay and toolbar             |
+| `@facet-smith/cli`       | Agent skill, source manifest, and machine-readable integrity checks  |
 
 The example is in `examples/next-app`; design notes are in [architecture.md](docs/architecture.md).
 
 ## Current limitations
 
-- Allocation is static source configuration and totals exactly one; there is no ramping control plane.
+- The default resolver requires static allocation totaling one; custom resolvers may own allocation and ramping.
 - Exposure deduplication is in-memory per provider lifetime, not a cross-tab/session guarantee.
 - Server switches make an HTTP round trip and App Router refresh.
 - The overlay targets DOM-rendering React applications and uses the union of descendant rectangles; unusual portals or canvas-only variants cannot be outlined automatically.

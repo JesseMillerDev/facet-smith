@@ -112,6 +112,85 @@ describe("FacetSmith integrity commands", () => {
     ]);
   });
 
+  it("records a custom resolver and permits resolver-owned allocation", () => {
+    const projectDirectory = temporaryProject();
+    const sourceDirectory = join(projectDirectory, "src");
+    mkdirSync(sourceDirectory);
+    writeFileSync(
+      join(sourceDirectory, "custom.tsx"),
+      `
+        import { createClientExperiment } from "@facet-smith/react";
+        const resolver = {
+          id: "application-flags",
+          resolve: () => ({ variantId: "control" }),
+        } as const;
+        createClientExperiment({
+          id: "custom-hero",
+          iteration: "launch-1",
+          defaultVariant: "control",
+          variants: {
+            control: { revision: "1", component: () => null },
+            concise: { revision: "1", component: () => null },
+          },
+        }, resolver);
+      `,
+    );
+
+    const result = scanExperimentSources(projectDirectory);
+    expect(result).toMatchObject({
+      schemaVersion: 2,
+      valid: true,
+      manifest: {
+        schemaVersion: 2,
+        experiments: [
+          {
+            id: "custom-hero",
+            resolverId: "application-flags",
+          },
+        ],
+      },
+    });
+    expect(result.manifest.experiments[0]).not.toHaveProperty("allocation");
+  });
+
+  it("diagnoses missing default allocation and non-static resolver IDs", () => {
+    const projectDirectory = temporaryProject();
+    const sourceDirectory = join(projectDirectory, "src");
+    mkdirSync(sourceDirectory);
+    writeFileSync(
+      join(sourceDirectory, "invalid.tsx"),
+      `
+        import { createClientExperiment } from "@facet-smith/react";
+        createClientExperiment({
+          id: "missing-allocation",
+          iteration: "launch-1",
+          defaultVariant: "control",
+          variants: { control: { revision: "1", component: () => null } },
+        });
+        const dynamicId: string = process.env.RESOLVER_ID ?? "flags";
+        createClientExperiment({
+          id: "dynamic-resolver",
+          iteration: "launch-1",
+          defaultVariant: "control",
+          variants: { control: { revision: "1", component: () => null } },
+        }, { id: dynamicId, resolve: () => ({ variantId: "control" }) });
+      `,
+    );
+
+    const result = scanExperimentSources(projectDirectory);
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "FS101",
+          experimentId: "missing-allocation",
+          path: "allocation",
+        }),
+        expect.objectContaining({ code: "FS103", path: "resolver.id" }),
+      ]),
+    );
+  });
+
   it("emits stable JSON diagnostics for conflicting IDs", () => {
     const projectDirectory = temporaryProject();
     const sourceDirectory = join(projectDirectory, "src");

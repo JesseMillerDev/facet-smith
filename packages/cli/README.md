@@ -28,6 +28,6 @@ npx @facet-smith/cli check --json
 npx @facet-smith/cli manifest
 ```
 
-`check` statically scans TypeScript and TSX without importing application code. It detects definitions created by `defineExperiment`, `createExperiment`, `createClientExperiment`, and `createNextExperiment`, including their explicit-prop curried forms. It reports stable diagnostics for non-static identity (`FS100`), invalid definitions (`FS101`), and duplicate or conflicting experiment IDs (`FS102`).
+`check` statically scans TypeScript and TSX without importing application code. It detects definitions created by `defineExperiment`, `createExperiment`, `createClientExperiment`, and `createNextExperiment`, including their explicit-prop curried forms. It reports stable diagnostics for non-static definition identity (`FS100`), invalid definitions (`FS101`), duplicate or conflicting experiment IDs (`FS102`), and non-static resolver identity (`FS103`).
 
-`manifest` emits a deterministic JSON catalog containing each experiment's iteration, variants, revisions, allocation, and source location. Test, build, coverage, and dependency directories are excluded from discovery.
+`manifest` emits a deterministic schema-v2 JSON catalog containing each experiment's iteration, variants, revisions, resolver ID, optional allocation, and source location. Test, build, coverage, and dependency directories are excluded from discovery.

@@ -16,6 +16,6 @@ A coding agent adding a variant must:
 8. Preview and exercise it through the non-production inspector.
 9. Never change traffic allocation or production state without explicit human authorization.
 10. Increment the revision after every traffic-bearing implementation change; never rewrite historical identity.
-11. Start a new immutable iteration when allocation, salt, eligibility, randomization unit, or assignment provider changes.
+11. Start a new immutable iteration when allocation, salt, eligibility, randomization unit, resolver, or resolver-to-vendor key mapping changes.
 
-Agents should keep variants as static source, dependencies explicit, and production traffic changes human-authorized. A change request should include the hypothesis, screenshots or visual evidence, test output, accessibility notes, and the exact definition/iteration/revision diff. Automated variant generation, preview matrices, and lifecycle mutations can build on the integrity manifest without bypassing these approval points.
+Agents should keep variants as static source, dependencies explicit, and production traffic changes human-authorized. Resolver IDs must also remain static literals so manifests can preserve assignment identity. An omitted allocation is valid only when a non-default resolver is passed to the experiment factory. A change request should include the hypothesis, screenshots or visual evidence, test output, accessibility notes, and the exact definition/iteration/revision diff. Automated variant generation, preview matrices, and lifecycle mutations can build on the integrity manifest without bypassing these approval points.

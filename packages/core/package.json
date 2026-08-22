@@ -1,7 +1,7 @@
 {
   "name": "@facet-smith/core",
   "version": "0.2.0",
-  "description": "Framework-neutral deterministic experiment assignment for FacetSmith",
+  "description": "Framework-neutral experiment validation and pluggable assignment for FacetSmith",
   "license": "MIT",
   "author": "Jesse Miller",
   "repository": {

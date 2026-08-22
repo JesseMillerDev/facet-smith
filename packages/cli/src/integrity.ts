@@ -1,6 +1,7 @@
 import { readdirSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import {
+  DEFAULT_ASSIGNMENT_RESOLVER_ID,
   experimentDefinitionFingerprint,
   getExperimentValidationIssues,
   type ExperimentDefinition,
@@ -49,15 +50,16 @@ export interface SourceLocation {
 export interface ExperimentManifestEntry extends ExperimentDefinition<
   Record<string, VariantMetadata>
 > {
+  readonly resolverId: string;
   readonly source: SourceLocation;
 }
 
 export interface ExperimentManifest {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly experiments: readonly ExperimentManifestEntry[];
 }
 
-export type DiagnosticCode = "FS100" | "FS101" | "FS102";
+export type DiagnosticCode = "FS100" | "FS101" | "FS102" | "FS103";
 
 export interface IntegrityDiagnostic {
   readonly code: DiagnosticCode;
@@ -69,7 +71,7 @@ export interface IntegrityDiagnostic {
 }
 
 export interface IntegrityResult {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly valid: boolean;
   readonly manifest: ExperimentManifest;
   readonly diagnostics: readonly IntegrityDiagnostic[];
@@ -131,6 +133,53 @@ function numberLiteral(expression: ts.Expression): number | undefined {
     return -Number(expression.operand.text);
   }
   return undefined;
+}
+
+function unwrapExpression(expression: ts.Expression): ts.Expression {
+  let current = expression;
+  while (
+    ts.isAsExpression(current) ||
+    ts.isSatisfiesExpression(current) ||
+    ts.isParenthesizedExpression(current)
+  ) {
+    current = current.expression;
+  }
+  return current;
+}
+
+function staticResolverId(
+  expression: ts.Expression,
+  checker: ts.TypeChecker,
+  visited = new Set<ts.Symbol>(),
+): string | undefined {
+  const current = unwrapExpression(expression);
+  if (ts.isObjectLiteralExpression(current)) {
+    return stringLiteral(property(current, "id"));
+  }
+  if (ts.isIdentifier(current)) {
+    let symbol = checker.getSymbolAtLocation(current);
+    if (symbol && (symbol.flags & ts.SymbolFlags.Alias) !== 0) {
+      symbol = checker.getAliasedSymbol(symbol);
+    }
+    if (symbol && !visited.has(symbol)) {
+      visited.add(symbol);
+      for (const declaration of symbol.declarations ?? []) {
+        if (ts.isVariableDeclaration(declaration) && declaration.initializer) {
+          const resolved = staticResolverId(
+            declaration.initializer,
+            checker,
+            visited,
+          );
+          if (resolved) return resolved;
+        }
+      }
+    }
+  }
+  const type = checker.getTypeAtLocation(current);
+  const id = type.getProperty("id");
+  if (!id) return undefined;
+  const idType = checker.getTypeOfSymbolAtLocation(id, current);
+  return idType.isStringLiteral() ? idType.value : undefined;
 }
 
 function moduleSpecifier(node: ts.Node): string | undefined {
@@ -350,8 +399,8 @@ function staticDefinition(
     defaultVariant === undefined ||
     !variantsNode ||
     !ts.isObjectLiteralExpression(variantsNode) ||
-    !allocationNode ||
-    !ts.isObjectLiteralExpression(allocationNode) ||
+    (allocationNode !== undefined &&
+      !ts.isObjectLiteralExpression(allocationNode)) ||
     (saltNode !== undefined && stringLiteral(saltNode) === undefined)
   ) {
     return undefined;
@@ -371,13 +420,16 @@ function staticDefinition(
     variants[variantId] = { revision };
   }
 
-  const allocation: Record<string, number> = {};
-  for (const allocationProperty of allocationNode.properties) {
-    if (!ts.isPropertyAssignment(allocationProperty)) return undefined;
-    const variantId = propertyName(allocationProperty.name);
-    const weight = numberLiteral(allocationProperty.initializer);
-    if (!variantId || weight === undefined) return undefined;
-    allocation[variantId] = weight;
+  let allocation: Record<string, number> | undefined;
+  if (allocationNode && ts.isObjectLiteralExpression(allocationNode)) {
+    allocation = {};
+    for (const allocationProperty of allocationNode.properties) {
+      if (!ts.isPropertyAssignment(allocationProperty)) return undefined;
+      const variantId = propertyName(allocationProperty.name);
+      const weight = numberLiteral(allocationProperty.initializer);
+      if (!variantId || weight === undefined) return undefined;
+      allocation[variantId] = weight;
+    }
   }
 
   return {
@@ -385,7 +437,7 @@ function staticDefinition(
     iteration,
     defaultVariant,
     variants,
-    allocation,
+    ...(allocation === undefined ? {} : { allocation }),
     ...(saltNode === undefined ? {} : { salt: stringLiteral(saltNode)! }),
   };
 }
@@ -435,18 +487,35 @@ export function scanExperimentSources(cwd = process.cwd()): IntegrityResult {
             source: location,
           });
         } else {
+          const resolverExpression = node.arguments[1];
+          const resolverId = resolverExpression
+            ? staticResolverId(resolverExpression, checker)
+            : DEFAULT_ASSIGNMENT_RESOLVER_ID;
+          if (resolverId === undefined) {
+            diagnostics.push({
+              code: "FS103",
+              severity: "error",
+              message:
+                "Assignment resolver IDs must be static string literals so agents and CI can inspect assignment identity.",
+              path: "resolver.id",
+              source: location,
+            });
+            return;
+          }
           const definition = staticDefinition(argument);
           if (!definition) {
             diagnostics.push({
               code: "FS100",
               severity: "error",
               message:
-                "Experiment identity, variants, revisions, and allocation must be static literals.",
+                "Experiment identity, variants, revisions, and any source allocation must be static literals.",
               path: "definition",
               source: location,
             });
           } else {
-            const issues = getExperimentValidationIssues(definition);
+            const issues = getExperimentValidationIssues(definition, {
+              id: resolverId,
+            });
             for (const issue of issues) {
               diagnostics.push({
                 code: "FS101",
@@ -457,7 +526,7 @@ export function scanExperimentSources(cwd = process.cwd()): IntegrityResult {
                 experimentId: definition.id,
               });
             }
-            experiments.push({ ...definition, source: location });
+            experiments.push({ ...definition, resolverId, source: location });
           }
         }
       }
@@ -503,9 +572,9 @@ export function scanExperimentSources(cwd = process.cwd()): IntegrityResult {
       left.code.localeCompare(right.code),
   );
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     valid: diagnostics.length === 0,
-    manifest: { schemaVersion: 1, experiments },
+    manifest: { schemaVersion: 2, experiments },
     diagnostics,
   };
 }

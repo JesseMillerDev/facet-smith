@@ -25,7 +25,7 @@ export const proxy = withExperimentSubject(applicationProxy);
 
 The existing proxy receives a `NextRequest` that already contains the subject header. Redirects and produced responses only need the persisted response cookie. A continuing `NextResponse.next()` is automatically upgraded to forward the subject. If the existing proxy supplies its own request-header allow-list, it must retain `x-experiment-subject`; FacetSmith rejects an incompatible response rather than silently allowing the first render to disagree with later renders.
 
-Authenticated applications should skip anonymous generation and pass their own stable, opaque account or user ID to both `read`/resolution code and `ExperimentProvider`. Avoid email addresses or other analytics-facing personal data. If neither identity exists, FacetSmith renders the default and reports exposures without a subject ID.
+Authenticated applications should skip anonymous generation and pass their own stable, opaque account or user ID to both `read`/resolution code and `ExperimentProvider`. Avoid email addresses or other analytics-facing personal data. If neither identity exists, FacetSmith renders the default and does not report exposure.
 
 ## Overrides and route handler
 
@@ -34,7 +34,7 @@ Authenticated applications should skip anonymous generation and pass their own s
 ```tsx
 export default async function Page({ searchParams }: PageProps) {
   const options = await readExperimentOptions({ searchParams });
-  const assignment = Hero.resolve(options);
+  const assignment = await Hero.resolve(options);
   const hero = await Hero.render({ title: "Hello" }, options);
 
   return (
@@ -68,8 +68,8 @@ When the inspector changes a registered server experiment, the provider posts th
 
 ## URL and cookie precedence
 
-The example treats URL overrides as developer overrides and the reserved cookie as explicit QA overrides, yielding URL → cookie → deterministic assignment → default. This makes copied links reproducible while retaining persisted QA state. Client localStorage is loaded after hydration and URL values win over localStorage for matching IDs.
+The example treats URL overrides as developer overrides and the reserved cookie as explicit QA overrides, yielding URL → cookie → configured resolver → default. This makes copied links reproducible while retaining persisted QA state. Client localStorage is loaded after hydration and URL values win over localStorage for matching IDs.
 
 ## SSR, caching, and hydration
 
-Pass the server assignment through `initialAssignments` when the same experiment has a client boundary. A matching experiment ID, iteration, variant, and revision is reused during hydration. Reading request cookies makes that route dynamic; never place personalized output in a shared full-page cache. Static data can still be fetched/cached outside this request-specific resolution. Streaming does not permit setting cookies during Server Component render, which is why all mutations use a route handler.
+Pass the server assignment through `initialAssignments` when the same experiment has a client boundary. A matching experiment ID, iteration, variant, revision, and resolver identity is reused during hydration. Reading request cookies makes that route dynamic; never place personalized output in a shared full-page cache. Static data can still be fetched/cached outside this request-specific resolution. Streaming does not permit setting cookies during Server Component render, which is why all mutations use a route handler.

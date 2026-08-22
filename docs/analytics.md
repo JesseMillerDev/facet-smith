@@ -23,6 +23,9 @@ Assignment is not exposure. FacetSmith emits only after experimental content
 becomes visible and deduplicates each experiment/iteration/variant/revision for the
 provider lifetime.
 
+Missing-subject defaults and resolver failure/timeout defaults are not
+assignments and never emit exposure, even when their fallback content is visible.
+
 ## PostHog example
 
 PostHog remains an application dependency. Adapt an already configured client

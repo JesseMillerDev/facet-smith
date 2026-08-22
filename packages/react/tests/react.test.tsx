@@ -81,6 +81,129 @@ describe("React experiments", () => {
     expect(screen.getByText("Welcome Ada")).toBeInTheDocument();
   });
 
+  it("resolves a custom synchronous assignment without source allocation", () => {
+    const Custom = createClientExperiment(
+      {
+        id: "custom-sync",
+        iteration: "launch-1",
+        defaultVariant: "control",
+        variants: {
+          control: { revision: "1", component: () => <p>Control</p> },
+          treatment: { revision: "1", component: () => <p>Treatment</p> },
+        },
+      },
+      {
+        id: "application-flags",
+        resolve: () => ({ variantId: "treatment" }),
+      },
+    );
+
+    render(
+      <ExperimentProvider subjectId="alice">
+        <Custom />
+      </ExperimentProvider>,
+    );
+    expect(screen.getByText("Treatment")).toBeInTheDocument();
+  });
+
+  it("renders an unexposed default while an async resolver is pending", async () => {
+    let complete: ((value: { variantId: string }) => void) | undefined;
+    const resolveAssignment = vi.fn(
+      () =>
+        new Promise<{ variantId: string }>((resolve) => {
+          complete = resolve;
+        }),
+    );
+    const Custom = createClientExperiment(
+      {
+        id: "custom-async",
+        iteration: "launch-1",
+        defaultVariant: "control",
+        variants: {
+          control: { revision: "1", component: () => <p>Pending control</p> },
+          treatment: {
+            revision: "1",
+            component: () => <p>Async treatment</p>,
+          },
+        },
+      },
+      {
+        id: "async-flags",
+        resolve: resolveAssignment,
+      },
+    );
+    const analytics = new InMemoryAnalyticsAdapter();
+    render(
+      <ExperimentProvider subjectId="alice" analytics={analytics}>
+        <Custom />
+      </ExperimentProvider>,
+    );
+
+    expect(screen.getByText("Pending control")).toBeInTheDocument();
+    expect(analytics.events).toHaveLength(0);
+    act(() => complete?.({ variantId: "treatment" }));
+    expect(await screen.findByText("Async treatment")).toBeInTheDocument();
+    expect(analytics.events).toHaveLength(0);
+    expect(resolveAssignment).toHaveBeenCalledOnce();
+  });
+
+  it("does not expose a no-subject or rejected resolver default", () => {
+    const analytics = new InMemoryAnalyticsAdapter();
+    const Rejected = createClientExperiment(
+      {
+        id: "rejected-variant",
+        iteration: "launch-1",
+        defaultVariant: "control",
+        variants: {
+          control: { revision: "1", component: () => <p>Safe default</p> },
+          treatment: { revision: "1", component: () => <p>Treatment</p> },
+        },
+      },
+      {
+        id: "invalid-flags",
+        resolve: () => ({ variantId: "remote-only" }),
+      },
+    );
+    const { rerender } = render(
+      <ExperimentProvider analytics={analytics}>
+        <Greeting name="Ada" />
+      </ExperimentProvider>,
+    );
+    act(() => {
+      observerCallback(
+        [
+          {
+            target: observedTargets.at(-1),
+            isIntersecting: true,
+            intersectionRatio: 1,
+          } as unknown as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      );
+    });
+    expect(analytics.events).toHaveLength(0);
+
+    rerender(
+      <ExperimentProvider subjectId="alice" analytics={analytics}>
+        <Rejected />
+      </ExperimentProvider>,
+    );
+    expect(screen.getByText("Safe default")).toBeInTheDocument();
+    act(() => {
+      observerCallback(
+        [
+          {
+            target: observedTargets.at(-1),
+            isIntersecting: true,
+            intersectionRatio: 1,
+          } as unknown as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      );
+    });
+    expect(analytics.events).toHaveLength(0);
+  });
+
   it("does not expose before visibility and deduplicates rerenders", () => {
     const analytics = new InMemoryAnalyticsAdapter();
     const { rerender } = render(
@@ -178,7 +301,7 @@ describe("React experiments", () => {
     });
     const analytics = new InMemoryAnalyticsAdapter();
     const { container } = render(
-      <ExperimentProvider analytics={analytics}>
+      <ExperimentProvider subjectId="alice" analytics={analytics}>
         <TextOnly />
       </ExperimentProvider>,
     );
@@ -221,7 +344,7 @@ describe("React experiments", () => {
     });
     const analytics = new InMemoryAnalyticsAdapter();
     const { container } = render(
-      <ExperimentProvider analytics={analytics}>
+      <ExperimentProvider subjectId="alice" analytics={analytics}>
         <MixedText />
       </ExperimentProvider>,
     );
@@ -260,7 +383,7 @@ describe("React experiments", () => {
     });
     const analytics = new InMemoryAnalyticsAdapter();
     const { container, rerender } = render(
-      <ExperimentProvider analytics={analytics}>
+      <ExperimentProvider subjectId="alice" analytics={analytics}>
         <DynamicText show />
       </ExperimentProvider>,
     );
@@ -268,7 +391,7 @@ describe("React experiments", () => {
     expect(sentinel).not.toBeNull();
 
     rerender(
-      <ExperimentProvider analytics={analytics}>
+      <ExperimentProvider subjectId="alice" analytics={analytics}>
         <DynamicText show={false} />
       </ExperimentProvider>,
     );
@@ -446,6 +569,30 @@ describe("React experiments", () => {
     expect(screen.getByText("Control Ada")).toBeInTheDocument();
   });
 
+  it("is safe without a provider when a custom resolver owns allocation", () => {
+    const Custom = createClientExperiment(
+      {
+        id: "providerless-custom",
+        iteration: "launch-1",
+        defaultVariant: "control",
+        variants: {
+          control: {
+            revision: "1",
+            component: () => <p>Providerless control</p>,
+          },
+          treatment: { revision: "1", component: () => <p>Treatment</p> },
+        },
+      },
+      {
+        id: "providerless-flags",
+        resolve: () => ({ variantId: "treatment" }),
+      },
+    );
+
+    render(<Custom />);
+    expect(screen.getByText("Providerless control")).toBeInTheDocument();
+  });
+
   it("fails loudly when one provider sees conflicting experiment IDs", () => {
     const First = createClientExperiment({
       id: "collision",
@@ -490,6 +637,60 @@ describe("React experiments", () => {
       </ExperimentProvider>,
     );
     expect(screen.getByText("Welcome Ada")).toBeInTheDocument();
+  });
+
+  it("reuses custom server assignments only for the matching resolver", () => {
+    const resolver = {
+      id: "hydration-flags",
+      resolve: () => ({ variantId: "treatment" }),
+    } as const;
+    const Hydrated = createClientExperiment(
+      {
+        id: "custom-hydration",
+        iteration: "launch-1",
+        defaultVariant: "control",
+        variants: {
+          control: { revision: "1", component: () => <p>Hydrated control</p> },
+          treatment: {
+            revision: "1",
+            component: () => <p>Resolved treatment</p>,
+          },
+        },
+      },
+      resolver,
+    );
+    const assignment = {
+      experimentId: "custom-hydration",
+      experimentIteration: "launch-1",
+      variantId: "control",
+      variantRevision: "1",
+      source: "resolver" as const,
+      resolverId: "hydration-flags",
+    };
+    const { rerender } = render(
+      <ExperimentProvider
+        subjectId="alice"
+        initialAssignments={{ "custom-hydration": assignment }}
+      >
+        <Hydrated />
+      </ExperimentProvider>,
+    );
+    expect(screen.getByText("Hydrated control")).toBeInTheDocument();
+
+    rerender(
+      <ExperimentProvider
+        subjectId="alice"
+        initialAssignments={{
+          "custom-hydration": {
+            ...assignment,
+            resolverId: "different-flags",
+          },
+        }}
+      >
+        <Hydrated />
+      </ExperimentProvider>,
+    );
+    expect(screen.getByText("Resolved treatment")).toBeInTheDocument();
   });
 
   it("rejects a pre-resolved assignment with a mismatched experiment ID", () => {

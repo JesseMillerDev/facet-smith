@@ -6,6 +6,7 @@ import type {
   ExperimentExposureEvent,
 } from "@facet-smith/analytics";
 import type {
+  AssignmentResolver,
   AssignmentResult,
   ExperimentDefinition,
   ExperimentOverrides,
@@ -23,7 +24,10 @@ export interface ExperimentRuntime {
   readonly attribution: ExperimentAttributionSnapshot;
   resolve<TVariants extends Record<string, VariantMetadata>>(
     definition: ExperimentDefinition<TVariants>,
-  ): AssignmentResult<keyof TVariants & string>;
+    resolver?: AssignmentResolver,
+  ):
+    | AssignmentResult<keyof TVariants & string>
+    | Promise<AssignmentResult<keyof TVariants & string>>;
   setOverride(experimentId: string, variantId: string | null): Promise<void>;
   resetAllOverrides(): Promise<void>;
   register(registration: RegisteredExperiment): () => void;

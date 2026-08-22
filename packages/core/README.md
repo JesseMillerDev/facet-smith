@@ -1,6 +1,6 @@
 # `@facet-smith/core`
 
-Framework-neutral experiment definition, validation, deterministic assignment, and override utilities for [FacetSmith](https://github.com/JesseMillerDev/facet-smith).
+Framework-neutral experiment definition, validation, pluggable assignment, and override utilities for [FacetSmith](https://github.com/JesseMillerDev/facet-smith).
 
 ## Install
 
@@ -30,6 +30,8 @@ const assignment = resolveExperiment(pricing, {
 ```
 
 Assignments are stable across Node.js and browsers. Without a stable subject ID, resolution safely uses the default variant. Overrides select only known source-defined variants and never evaluate code or remote markup.
+
+The exported `defaultAssignmentResolver` contains the original FNV-1a behavior. Applications can instead provide an `AssignmentResolver` to `resolveExperiment`; synchronous resolvers remain synchronous, while async failures and timeouts return the unexposed default with diagnostics. See the [resolver authoring guide](https://github.com/JesseMillerDev/facet-smith/blob/main/docs/assignment-resolvers.md).
 
 Variant revisions are immutable implementation identities. Iterations are immutable experimental-run identities and participate in bucketing. Increment a revision after any traffic-bearing implementation change; start a new iteration when assignment semantics change.
 

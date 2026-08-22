@@ -4,6 +4,7 @@ import {
   resolveExperiment,
   serializeOverrides,
   validateExperiment,
+  type AssignmentResolver,
   type AssignmentResult,
   type ExperimentDefinition,
   type ExperimentOverrides,
@@ -25,16 +26,26 @@ export interface NextVariant<P> extends VariantMetadata {
   readonly component: (props: P) => ReactNode | Promise<ReactNode>;
 }
 
-export type NextExperimentRuntimeOptions = ResolveOptions;
+export type NextExperimentRuntimeOptions = Omit<ResolveOptions, "resolver">;
+
+type NextAssignment<
+  TVariants extends Record<string, VariantMetadata>,
+  TResolver extends AssignmentResolver | undefined,
+> = TResolver extends undefined
+  ? AssignmentResult<keyof TVariants & string>
+  :
+      | AssignmentResult<keyof TVariants & string>
+      | Promise<AssignmentResult<keyof TVariants & string>>;
 
 export interface NextExperiment<
   P,
   TVariants extends Record<string, VariantMetadata>,
+  TResolver extends AssignmentResolver | undefined = undefined,
 > {
   readonly definition: ExperimentDefinition<TVariants>;
   resolve(
     options?: NextExperimentRuntimeOptions,
-  ): AssignmentResult<keyof TVariants & string>;
+  ): NextAssignment<TVariants, TResolver>;
   render(props: P, options?: NextExperimentRuntimeOptions): Promise<ReactNode>;
 }
 
@@ -50,36 +61,55 @@ type UnionToIntersection<U> = (
 type NextProps<TVariants extends Record<string, NextVariantShape>> =
   UnionToIntersection<Parameters<TVariants[keyof TVariants]["component"]>[0]>;
 
-export function createNextExperiment<P>(): <
-  const TVariants extends Record<string, NextVariant<P>>,
->(
-  definition: ExperimentDefinition<TVariants>,
-) => NextExperiment<P, TVariants>;
+export interface NextExperimentFactory<P> {
+  <const TVariants extends Record<string, NextVariant<P>>>(
+    definition: ExperimentDefinition<TVariants>,
+  ): NextExperiment<P, TVariants>;
+  <const TVariants extends Record<string, NextVariant<P>>>(
+    definition: ExperimentDefinition<TVariants>,
+    resolver: AssignmentResolver,
+  ): NextExperiment<P, TVariants, AssignmentResolver>;
+}
+
+export function createNextExperiment<P>(): NextExperimentFactory<P>;
 export function createNextExperiment<
   const TVariants extends Record<string, NextVariantShape>,
 >(
   definition: ExperimentDefinition<TVariants>,
 ): NextExperiment<NextProps<TVariants>, TVariants>;
+export function createNextExperiment<
+  const TVariants extends Record<string, NextVariantShape>,
+>(
+  definition: ExperimentDefinition<TVariants>,
+  resolver: AssignmentResolver,
+): NextExperiment<NextProps<TVariants>, TVariants, AssignmentResolver>;
 export function createNextExperiment(
   definition?: ExperimentDefinition<Record<string, NextVariantShape>>,
+  resolver?: AssignmentResolver,
 ): unknown {
   if (definition === undefined) {
     return (
       explicitDefinition: ExperimentDefinition<
         Record<string, NextVariantShape>
       >,
-    ) => buildNextExperiment(explicitDefinition);
+      explicitResolver?: AssignmentResolver,
+    ) => buildNextExperiment(explicitDefinition, explicitResolver);
   }
-  return buildNextExperiment(definition);
+  return buildNextExperiment(definition, resolver);
 }
 
 function buildNextExperiment<
   const TVariants extends Record<string, NextVariantShape>,
 >(
   definition: ExperimentDefinition<TVariants>,
-): NextExperiment<NextProps<TVariants>, TVariants> {
+  resolver?: AssignmentResolver,
+): NextExperiment<
+  NextProps<TVariants>,
+  TVariants,
+  AssignmentResolver | undefined
+> {
   type P = NextProps<TVariants>;
-  validateExperiment(definition);
+  validateExperiment(definition, resolver);
   const revisions = Object.fromEntries(
     Object.entries(definition.variants).map(([id, variant]) => [
       id,
@@ -89,10 +119,14 @@ function buildNextExperiment<
   return {
     definition,
     resolve(options = {}) {
-      return resolveExperiment(definition, options);
+      return resolver === undefined
+        ? resolveExperiment(definition, options)
+        : resolveExperiment(definition, { ...options, resolver });
     },
     async render(props, options = {}) {
-      const assignment = resolveExperiment(definition, options);
+      const assignment = await (resolver === undefined
+        ? resolveExperiment(definition, options)
+        : resolveExperiment(definition, { ...options, resolver }));
       const Variant = definition.variants[assignment.variantId]?.component as
         | ((props: P) => ReactNode | Promise<ReactNode>)
         | undefined;

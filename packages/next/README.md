@@ -33,6 +33,8 @@ export default async function Page({ searchParams }) {
 }
 ```
 
+Pass an `AssignmentResolver` as the factory's second argument to delegate assignment. `resolve()` remains synchronous for the default and synchronous custom resolvers; `render()` awaits an async resolver before selecting a source-defined variant. See the [resolver authoring guide](https://github.com/JesseMillerDev/facet-smith/blob/main/docs/assignment-resolvers.md).
+
 For an anonymous subject, create `proxy.ts`:
 
 ```ts
