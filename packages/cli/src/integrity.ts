@@ -172,15 +172,17 @@ function implementationText(
       ? current
       : undefined;
   let symbol = symbolNode ? checker.getSymbolAtLocation(symbolNode) : undefined;
-  const imported = Boolean(symbol && (symbol.flags & ts.SymbolFlags.Alias) !== 0);
+  const imported = Boolean(
+    symbol && (symbol.flags & ts.SymbolFlags.Alias) !== 0,
+  );
   if (imported && symbol) symbol = checker.getAliasedSymbol(symbol);
   if (symbol && !visited.has(symbol)) {
     visited.add(symbol);
     const declarations = symbol.declarations ?? [];
     if (imported) {
-      const source = declarations.find(
-        (declaration) => !declaration.getSourceFile().isDeclarationFile,
-      )?.getSourceFile();
+      const source = declarations
+        .find((declaration) => !declaration.getSourceFile().isDeclarationFile)
+        ?.getSourceFile();
       if (source) return source.getFullText();
     }
     for (const declaration of declarations) {

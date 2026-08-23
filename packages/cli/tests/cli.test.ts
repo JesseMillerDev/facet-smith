@@ -201,7 +201,9 @@ describe("FacetSmith integrity commands", () => {
         error: (message) => errors.push(message),
       }),
     ).toBe(1);
-    expect(errors).toEqual([expect.stringContaining("manifest drift detected")]);
+    expect(errors).toEqual([
+      expect.stringContaining("manifest drift detected"),
+    ]);
   });
 
   it("gives a targeted migration message for a schema-v1 manifest", () => {
