@@ -1,5 +1,12 @@
 # @facet-smith/growthbook
 
+## 0.2.1
+
+### Patch Changes
+
+- Republish the GrowthBook adapter through the workspace-aware release pipeline so
+  the published package resolves its `@facet-smith/core` dependency correctly.
+
 ## 0.2.0
 
 ### Minor Changes
