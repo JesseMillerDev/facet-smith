@@ -1,5 +1,13 @@
 # @facet-smith/analytics
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [030bcac]
+- Updated dependencies [642791c]
+  - @facet-smith/core@0.3.0
+
 ## 0.3.0
 
 ### Minor Changes
