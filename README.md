@@ -49,7 +49,7 @@ npx @facet-smith/cli manifest
 npx @facet-smith/cli manifest --check facetsmith.manifest.json
 ```
 
-Diagnostics have stable codes and source locations. The manifest records experiment, iteration, variant, revision, resolver, optional allocation, and source identity without importing or executing application code. Commit it and use `manifest --check` when CI should detect assignment-identity drift across releases.
+Diagnostics have stable codes and source locations. The manifest records experiment, iteration, variant, revision, resolver, optional allocation, source identity, and a hash of each source variant implementation without importing or executing application code. Commit it and use `manifest --check` so CI detects assignment-identity drift and traffic-bearing implementation edits that omitted a revision bump.
 
 ## Five-minute client experiment
 

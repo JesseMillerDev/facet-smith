@@ -160,6 +160,50 @@ describe("FacetSmith integrity commands", () => {
     expect(errors.at(-1)).toContain("manifest drift detected");
   });
 
+  it("reports drift when an imported variant implementation changes without a revision bump", () => {
+    const projectDirectory = temporaryProject();
+    const sourceDirectory = join(projectDirectory, "src");
+    mkdirSync(sourceDirectory);
+    const variantPath = join(sourceDirectory, "control.tsx");
+    writeFileSync(
+      variantPath,
+      `export function Control() { return <button>Get it now</button>; }`,
+    );
+    writeFileSync(
+      join(sourceDirectory, "experiment.tsx"),
+      `
+        import { createClientExperiment } from "@facet-smith/react";
+        import { Control } from "./control";
+        createClientExperiment({
+          id: "checkout-copy",
+          iteration: "launch-1",
+          defaultVariant: "control",
+          variants: { control: { revision: "1", component: Control } },
+          allocation: { control: 1 },
+        });
+      `,
+    );
+    const manifestPath = join(projectDirectory, "facetsmith.manifest.json");
+    writeFileSync(
+      manifestPath,
+      JSON.stringify(scanExperimentSources(projectDirectory).manifest, null, 2),
+    );
+    const errors: string[] = [];
+
+    writeFileSync(
+      variantPath,
+      `export function Control() { return <button>Get it today</button>; }`,
+    );
+
+    expect(
+      runCli(["manifest", "--cwd", projectDirectory, "--check", manifestPath], {
+        log: () => undefined,
+        error: (message) => errors.push(message),
+      }),
+    ).toBe(1);
+    expect(errors).toEqual([expect.stringContaining("manifest drift detected")]);
+  });
+
   it("gives a targeted migration message for a schema-v1 manifest", () => {
     const projectDirectory = temporaryProject();
     const manifestPath = join(projectDirectory, "facetsmith.manifest.json");

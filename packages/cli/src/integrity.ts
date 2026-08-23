@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readdirSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import {
@@ -47,8 +48,12 @@ export interface SourceLocation {
   readonly column: number;
 }
 
+export interface ManifestVariantMetadata extends VariantMetadata {
+  readonly implementationHash?: string;
+}
+
 export interface ExperimentManifestEntry extends ExperimentDefinition<
-  Record<string, VariantMetadata>
+  Record<string, ManifestVariantMetadata>
 > {
   readonly resolverId: string;
   readonly source: SourceLocation;
@@ -145,6 +150,63 @@ function unwrapExpression(expression: ts.Expression): ts.Expression {
     current = current.expression;
   }
   return current;
+}
+
+function implementationText(
+  expression: ts.Expression,
+  checker: ts.TypeChecker,
+  visited = new Set<ts.Symbol>(),
+): string {
+  const current = unwrapExpression(expression);
+  if (
+    ts.isArrowFunction(current) ||
+    ts.isFunctionExpression(current) ||
+    ts.isClassExpression(current)
+  ) {
+    return current.getText(current.getSourceFile());
+  }
+
+  const symbolNode = ts.isPropertyAccessExpression(current)
+    ? current.name
+    : ts.isIdentifier(current)
+      ? current
+      : undefined;
+  let symbol = symbolNode ? checker.getSymbolAtLocation(symbolNode) : undefined;
+  const imported = Boolean(symbol && (symbol.flags & ts.SymbolFlags.Alias) !== 0);
+  if (imported && symbol) symbol = checker.getAliasedSymbol(symbol);
+  if (symbol && !visited.has(symbol)) {
+    visited.add(symbol);
+    const declarations = symbol.declarations ?? [];
+    if (imported) {
+      const source = declarations.find(
+        (declaration) => !declaration.getSourceFile().isDeclarationFile,
+      )?.getSourceFile();
+      if (source) return source.getFullText();
+    }
+    for (const declaration of declarations) {
+      if (ts.isVariableDeclaration(declaration) && declaration.initializer) {
+        return implementationText(declaration.initializer, checker, visited);
+      }
+      if (
+        ts.isFunctionDeclaration(declaration) ||
+        ts.isClassDeclaration(declaration)
+      ) {
+        return declaration.getText(declaration.getSourceFile());
+      }
+    }
+  }
+
+  return current.getText(current.getSourceFile());
+}
+
+function implementationHash(
+  expression: ts.Expression,
+  checker: ts.TypeChecker,
+): string {
+  const normalized = implementationText(expression, checker)
+    .replaceAll("\r\n", "\n")
+    .trim();
+  return `sha256:${createHash("sha256").update(normalized).digest("hex")}`;
 }
 
 function staticResolverId(
@@ -386,7 +448,8 @@ function sourceLocation(
 
 function staticDefinition(
   object: ts.ObjectLiteralExpression,
-): ExperimentDefinition<Record<string, VariantMetadata>> | undefined {
+  checker: ts.TypeChecker,
+): ExperimentDefinition<Record<string, ManifestVariantMetadata>> | undefined {
   const id = stringLiteral(property(object, "id"));
   const iteration = stringLiteral(property(object, "iteration"));
   const defaultVariant = stringLiteral(property(object, "defaultVariant"));
@@ -406,7 +469,7 @@ function staticDefinition(
     return undefined;
   }
 
-  const variants: Record<string, VariantMetadata> = {};
+  const variants: Record<string, ManifestVariantMetadata> = {};
   for (const variantNode of variantsNode.properties) {
     if (!ts.isPropertyAssignment(variantNode)) return undefined;
     const variantId = propertyName(variantNode.name);
@@ -417,7 +480,13 @@ function staticDefinition(
       property(variantNode.initializer, "revision"),
     );
     if (revision === undefined) return undefined;
-    variants[variantId] = { revision };
+    const component = property(variantNode.initializer, "component");
+    variants[variantId] = {
+      revision,
+      ...(component === undefined
+        ? {}
+        : { implementationHash: implementationHash(component, checker) }),
+    };
   }
 
   let allocation: Record<string, number> | undefined;
@@ -502,7 +571,7 @@ export function scanExperimentSources(cwd = process.cwd()): IntegrityResult {
             });
             return;
           }
-          const definition = staticDefinition(argument);
+          const definition = staticDefinition(argument, checker);
           if (!definition) {
             diagnostics.push({
               code: "FS100",

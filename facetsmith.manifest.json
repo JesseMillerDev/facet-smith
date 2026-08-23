@@ -7,10 +7,12 @@
       "defaultVariant": "numbers",
       "variants": {
         "numbers": {
-          "revision": "1"
+          "revision": "1",
+          "implementationHash": "sha256:f9048b3f4213c90a365f339910caf2962c193198806a6d2993c4c5051528b442"
         },
         "promise": {
-          "revision": "1"
+          "revision": "1",
+          "implementationHash": "sha256:a72a8a8be858057fd0cae2ecf4f8641ddab48a17b7bb4055050337bb08473ab9"
         }
       },
       "allocation": {
@@ -30,10 +32,12 @@
       "defaultVariant": "control",
       "variants": {
         "control": {
-          "revision": "1"
+          "revision": "1",
+          "implementationHash": "sha256:4ec99a434cd674f98a5e944a4f9ecf05d67ef560410301e165b38f78c5cf54c5"
         },
         "express": {
-          "revision": "1"
+          "revision": "1",
+          "implementationHash": "sha256:d6ca76f91584b1321b257884972f244e65f6ccb322a4ef4bca6919d2e2c8c38f"
         }
       },
       "resolverId": "example-external-service",
@@ -49,10 +53,12 @@
       "defaultVariant": "control",
       "variants": {
         "control": {
-          "revision": "1"
+          "revision": "1",
+          "implementationHash": "sha256:4ec99a434cd674f98a5e944a4f9ecf05d67ef560410301e165b38f78c5cf54c5"
         },
         "express": {
-          "revision": "1"
+          "revision": "1",
+          "implementationHash": "sha256:d6ca76f91584b1321b257884972f244e65f6ccb322a4ef4bca6919d2e2c8c38f"
         }
       },
       "resolverId": "example-external-service",
@@ -68,13 +74,16 @@
       "defaultVariant": "control",
       "variants": {
         "control": {
-          "revision": "1"
+          "revision": "1",
+          "implementationHash": "sha256:37865e1d0894df621d398406b007f4343e2f78afdcee8b81952035fd8ee87437"
         },
         "concise": {
-          "revision": "1"
+          "revision": "1",
+          "implementationHash": "sha256:d65f61e3e2af8447048417a55d51d3a79634318b04679416caeafbf9b6d8aff6"
         },
         "split": {
-          "revision": "1"
+          "revision": "1",
+          "implementationHash": "sha256:099d7c8ba3f44a11f745468c6dd59c3c2788188ccd629e20a5aa6111ead3faf4"
         }
       },
       "allocation": {
@@ -96,10 +105,12 @@
       "defaultVariant": "technical",
       "variants": {
         "technical": {
-          "revision": "1"
+          "revision": "1",
+          "implementationHash": "sha256:309c353910d67a8179c5883da51faefb8a099a24fe2ec9ebbd02041ebe7c7d59"
         },
         "narrative": {
-          "revision": "1"
+          "revision": "1",
+          "implementationHash": "sha256:7d4bc69ef4c4c3cd37bfa2dfa0f299393c63b9beddd2a975bda43a9ac1142b62"
         }
       },
       "allocation": {
