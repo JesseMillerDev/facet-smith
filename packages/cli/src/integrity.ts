@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import { readdirSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
@@ -152,62 +153,87 @@ function unwrapExpression(expression: ts.Expression): ts.Expression {
   return current;
 }
 
+const implementationPrinter = ts.createPrinter({
+  newLine: ts.NewLineKind.LineFeed,
+  removeComments: true,
+});
+
+function canonicalFileName(fileName: string): string {
+  const absolute = resolve(fileName);
+  return ts.sys.useCaseSensitiveFileNames ? absolute : absolute.toLowerCase();
+}
+
 function implementationText(
   expression: ts.Expression,
   checker: ts.TypeChecker,
-  visited = new Set<ts.Symbol>(),
+  hashableFiles: ReadonlySet<string>,
 ): string {
+  const fragments = new Set<string>();
+  const visitedNodes = new Set<ts.Node>();
+  const visitedSymbols = new Set<ts.Symbol>();
+
+  const isHashable = (node: ts.Node): boolean =>
+    hashableFiles.has(canonicalFileName(node.getSourceFile().fileName));
+
+  const collectSymbol = (initialSymbol: ts.Symbol | undefined): void => {
+    if (!initialSymbol || visitedSymbols.has(initialSymbol)) return;
+    visitedSymbols.add(initialSymbol);
+
+    let symbol = initialSymbol;
+    if ((symbol.flags & ts.SymbolFlags.Alias) !== 0) {
+      const aliased = checker.getAliasedSymbol(symbol);
+      if (aliased !== symbol) {
+        collectSymbol(aliased);
+        return;
+      }
+    }
+
+    for (const declaration of symbol.declarations ?? []) {
+      if (isHashable(declaration)) collectNode(declaration);
+    }
+  };
+
+  const collectNode = (node: ts.Node): void => {
+    if (visitedNodes.has(node) || !isHashable(node)) return;
+    visitedNodes.add(node);
+    fragments.add(
+      implementationPrinter
+        .printNode(ts.EmitHint.Unspecified, node, node.getSourceFile())
+        .trim(),
+    );
+
+    const visit = (child: ts.Node): void => {
+      if (ts.isIdentifier(child)) {
+        collectSymbol(checker.getSymbolAtLocation(child));
+      }
+      ts.forEachChild(child, visit);
+    };
+    ts.forEachChild(node, visit);
+  };
+
   const current = unwrapExpression(expression);
-  if (
-    ts.isArrowFunction(current) ||
-    ts.isFunctionExpression(current) ||
-    ts.isClassExpression(current)
-  ) {
-    return current.getText(current.getSourceFile());
+  if (ts.isIdentifier(current) || ts.isPropertyAccessExpression(current)) {
+    const symbolNode = ts.isPropertyAccessExpression(current)
+      ? current.name
+      : current;
+    collectSymbol(checker.getSymbolAtLocation(symbolNode));
+  }
+  if (fragments.size === 0) {
+    collectNode(current);
   }
 
-  const symbolNode = ts.isPropertyAccessExpression(current)
-    ? current.name
-    : ts.isIdentifier(current)
-      ? current
-      : undefined;
-  let symbol = symbolNode ? checker.getSymbolAtLocation(symbolNode) : undefined;
-  const imported = Boolean(
-    symbol && (symbol.flags & ts.SymbolFlags.Alias) !== 0,
-  );
-  if (imported && symbol) symbol = checker.getAliasedSymbol(symbol);
-  if (symbol && !visited.has(symbol)) {
-    visited.add(symbol);
-    const declarations = symbol.declarations ?? [];
-    if (imported) {
-      const source = declarations
-        .find((declaration) => !declaration.getSourceFile().isDeclarationFile)
-        ?.getSourceFile();
-      if (source) return source.getFullText();
-    }
-    for (const declaration of declarations) {
-      if (ts.isVariableDeclaration(declaration) && declaration.initializer) {
-        return implementationText(declaration.initializer, checker, visited);
-      }
-      if (
-        ts.isFunctionDeclaration(declaration) ||
-        ts.isClassDeclaration(declaration)
-      ) {
-        return declaration.getText(declaration.getSourceFile());
-      }
-    }
-  }
-
-  return current.getText(current.getSourceFile());
+  return [...fragments]
+    .sort()
+    .map((fragment) => `${Buffer.byteLength(fragment, "utf8")}:${fragment}`)
+    .join("");
 }
 
 function implementationHash(
   expression: ts.Expression,
   checker: ts.TypeChecker,
+  hashableFiles: ReadonlySet<string>,
 ): string {
-  const normalized = implementationText(expression, checker)
-    .replaceAll("\r\n", "\n")
-    .trim();
+  const normalized = implementationText(expression, checker, hashableFiles);
   return `sha256:${createHash("sha256").update(normalized).digest("hex")}`;
 }
 
@@ -451,6 +477,7 @@ function sourceLocation(
 function staticDefinition(
   object: ts.ObjectLiteralExpression,
   checker: ts.TypeChecker,
+  hashableFiles: ReadonlySet<string>,
 ): ExperimentDefinition<Record<string, ManifestVariantMetadata>> | undefined {
   const id = stringLiteral(property(object, "id"));
   const iteration = stringLiteral(property(object, "iteration"));
@@ -487,7 +514,13 @@ function staticDefinition(
       revision,
       ...(component === undefined
         ? {}
-        : { implementationHash: implementationHash(component, checker) }),
+        : {
+            implementationHash: implementationHash(
+              component,
+              checker,
+              hashableFiles,
+            ),
+          }),
     };
   }
 
@@ -513,23 +546,41 @@ function staticDefinition(
   };
 }
 
+function projectCompilerOptions(root: string): ts.CompilerOptions {
+  const defaults: ts.CompilerOptions = {
+    allowJs: true,
+    checkJs: false,
+    jsx: ts.JsxEmit.Preserve,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+    noEmit: true,
+    skipLibCheck: true,
+    target: ts.ScriptTarget.ES2022,
+  };
+  const configPath = resolve(root, "tsconfig.json");
+  if (!ts.sys.fileExists(configPath)) return defaults;
+
+  const config = ts.readConfigFile(configPath, ts.sys.readFile);
+  if (config.error) return defaults;
+  const parsed = ts.parseJsonConfigFileContent(
+    config.config,
+    ts.sys,
+    dirname(configPath),
+    undefined,
+    configPath,
+  );
+  return { ...defaults, ...parsed.options, noEmit: true };
+}
+
 export function scanExperimentSources(cwd = process.cwd()): IntegrityResult {
   const root = resolve(cwd);
   const experiments: ExperimentManifestEntry[] = [];
   const diagnostics: IntegrityDiagnostic[] = [];
   const files = sourceFiles(root);
+  const hashableFiles = new Set(files.map(canonicalFileName));
   const program = ts.createProgram({
     rootNames: files,
-    options: {
-      allowJs: true,
-      checkJs: false,
-      jsx: ts.JsxEmit.Preserve,
-      module: ts.ModuleKind.ESNext,
-      moduleResolution: ts.ModuleResolutionKind.Bundler,
-      noEmit: true,
-      skipLibCheck: true,
-      target: ts.ScriptTarget.ES2022,
-    },
+    options: projectCompilerOptions(root),
   });
   const checker = program.getTypeChecker();
 
@@ -573,7 +624,7 @@ export function scanExperimentSources(cwd = process.cwd()): IntegrityResult {
             });
             return;
           }
-          const definition = staticDefinition(argument, checker);
+          const definition = staticDefinition(argument, checker, hashableFiles);
           if (!definition) {
             diagnostics.push({
               code: "FS100",

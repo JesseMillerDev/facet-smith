@@ -206,6 +206,125 @@ describe("FacetSmith integrity commands", () => {
     ]);
   });
 
+  it("hashes variant implementations imported through tsconfig path aliases", () => {
+    const projectDirectory = temporaryProject();
+    const sourceDirectory = join(projectDirectory, "src");
+    const componentDirectory = join(sourceDirectory, "components");
+    mkdirSync(sourceDirectory);
+    mkdirSync(componentDirectory);
+    writeFileSync(
+      join(projectDirectory, "tsconfig.json"),
+      JSON.stringify({
+        compilerOptions: {
+          baseUrl: ".",
+          jsx: "preserve",
+          module: "esnext",
+          moduleResolution: "bundler",
+          paths: { "@/*": ["src/*"] },
+        },
+        include: ["src"],
+      }),
+    );
+    const variantPath = join(componentDirectory, "hero.tsx");
+    writeFileSync(
+      variantPath,
+      `export function Hero() { return <h1>Original hero</h1>; }`,
+    );
+    writeFileSync(
+      join(sourceDirectory, "experiment.tsx"),
+      `
+        import { createClientExperiment } from "@facet-smith/react";
+        import { Hero } from "@/components/hero";
+        createClientExperiment({
+          id: "aliased-hero",
+          iteration: "launch-1",
+          defaultVariant: "control",
+          variants: { control: { revision: "1", component: Hero } },
+          allocation: { control: 1 },
+        });
+      `,
+    );
+    const originalHash =
+      scanExperimentSources(projectDirectory).manifest.experiments[0]?.variants
+        .control?.implementationHash;
+
+    writeFileSync(
+      variantPath,
+      `export function Hero() { return <h1>Replacement hero</h1>; }`,
+    );
+
+    expect(
+      scanExperimentSources(projectDirectory).manifest.experiments[0]?.variants
+        .control?.implementationHash,
+    ).not.toBe(originalHash);
+  });
+
+  it("does not hash unrelated contents of a relative variant module", () => {
+    const projectDirectory = temporaryProject();
+    const sourceDirectory = join(projectDirectory, "src");
+    mkdirSync(sourceDirectory);
+    const variantPath = join(sourceDirectory, "control.tsx");
+    const variantSource = `export function Control() { return <button>Buy now</button>; }`;
+    writeFileSync(variantPath, variantSource);
+    writeFileSync(
+      join(sourceDirectory, "experiment.tsx"),
+      `
+        import { createClientExperiment } from "@facet-smith/react";
+        import { Control } from "./control";
+        createClientExperiment({
+          id: "checkout-copy",
+          iteration: "launch-1",
+          defaultVariant: "control",
+          variants: { control: { revision: "1", component: Control } },
+          allocation: { control: 1 },
+        });
+      `,
+    );
+    const originalHash =
+      scanExperimentSources(projectDirectory).manifest.experiments[0]?.variants
+        .control?.implementationHash;
+
+    writeFileSync(
+      variantPath,
+      `${variantSource}\n// Unrelated module comment.\n`,
+    );
+
+    expect(
+      scanExperimentSources(projectDirectory).manifest.experiments[0]?.variants
+        .control?.implementationHash,
+    ).toBe(originalHash);
+  });
+
+  it("hashes transitive same-file dependencies of a variant", () => {
+    const projectDirectory = temporaryProject();
+    const sourceDirectory = join(projectDirectory, "src");
+    mkdirSync(sourceDirectory);
+    const experimentPath = join(sourceDirectory, "experiment.tsx");
+    const experimentSource = (label: string) => `
+      import { createClientExperiment } from "@facet-smith/react";
+      function buttonLabel() { return "${label}"; }
+      function Control() { return <button>{buttonLabel()}</button>; }
+      createClientExperiment({
+        id: "checkout-copy",
+        iteration: "launch-1",
+        defaultVariant: "control",
+        variants: { control: { revision: "1", component: Control } },
+        allocation: { control: 1 },
+      });
+    `;
+    writeFileSync(experimentPath, experimentSource("Buy now"));
+    const originalHash =
+      scanExperimentSources(projectDirectory).manifest.experiments[0]?.variants
+        .control?.implementationHash;
+
+    writeFileSync(experimentPath, experimentSource("Buy today"));
+
+    expect(
+      scanExperimentSources(projectDirectory).manifest.experiments[0]?.variants
+        .control?.implementationHash,
+    ).not.toBe(originalHash);
+  });
+
   it("gives a targeted migration message for a schema-v1 manifest", () => {
     const projectDirectory = temporaryProject();
     const manifestPath = join(projectDirectory, "facetsmith.manifest.json");

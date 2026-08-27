@@ -8,11 +8,11 @@
       "variants": {
         "numbers": {
           "revision": "1",
-          "implementationHash": "sha256:f9048b3f4213c90a365f339910caf2962c193198806a6d2993c4c5051528b442"
+          "implementationHash": "sha256:f12b3ad1138e0411d906c5307d2cdc773731bbb514557fb3dadbfa6460547b36"
         },
         "promise": {
           "revision": "1",
-          "implementationHash": "sha256:a72a8a8be858057fd0cae2ecf4f8641ddab48a17b7bb4055050337bb08473ab9"
+          "implementationHash": "sha256:28ad5000498a6c2ff76a56800f792d150473d85289bb983af92df10ca1113b99"
         }
       },
       "allocation": {
@@ -33,11 +33,11 @@
       "variants": {
         "control": {
           "revision": "1",
-          "implementationHash": "sha256:4ec99a434cd674f98a5e944a4f9ecf05d67ef560410301e165b38f78c5cf54c5"
+          "implementationHash": "sha256:32766d65175b0e97650eeb5f23c83b4c9630c035003d783f570c86d1fc1e7d22"
         },
         "express": {
           "revision": "1",
-          "implementationHash": "sha256:d6ca76f91584b1321b257884972f244e65f6ccb322a4ef4bca6919d2e2c8c38f"
+          "implementationHash": "sha256:4e887cdac5695a101504f49f9e79d4aa61d5c1bac17bb289471d204f8b3aa3c2"
         }
       },
       "resolverId": "example-external-service",
@@ -54,11 +54,11 @@
       "variants": {
         "control": {
           "revision": "1",
-          "implementationHash": "sha256:4ec99a434cd674f98a5e944a4f9ecf05d67ef560410301e165b38f78c5cf54c5"
+          "implementationHash": "sha256:32766d65175b0e97650eeb5f23c83b4c9630c035003d783f570c86d1fc1e7d22"
         },
         "express": {
           "revision": "1",
-          "implementationHash": "sha256:d6ca76f91584b1321b257884972f244e65f6ccb322a4ef4bca6919d2e2c8c38f"
+          "implementationHash": "sha256:4e887cdac5695a101504f49f9e79d4aa61d5c1bac17bb289471d204f8b3aa3c2"
         }
       },
       "resolverId": "example-external-service",
@@ -75,15 +75,15 @@
       "variants": {
         "control": {
           "revision": "1",
-          "implementationHash": "sha256:37865e1d0894df621d398406b007f4343e2f78afdcee8b81952035fd8ee87437"
+          "implementationHash": "sha256:5fb63483248d625f4577452dbdabf9c1522fdb935e9f9bb54204f7c273580aa2"
         },
         "concise": {
           "revision": "1",
-          "implementationHash": "sha256:d65f61e3e2af8447048417a55d51d3a79634318b04679416caeafbf9b6d8aff6"
+          "implementationHash": "sha256:32d8ef2e74d0cfd0785df5a0ddfdbbce8a80dee7ddc103c90e95e0ae5014095a"
         },
         "split": {
           "revision": "1",
-          "implementationHash": "sha256:099d7c8ba3f44a11f745468c6dd59c3c2788188ccd629e20a5aa6111ead3faf4"
+          "implementationHash": "sha256:93d9f8e4e44ed52172b0b89fa5e5cee00d33c68965e49a0fb859f3f9d093b72c"
         }
       },
       "allocation": {
@@ -106,11 +106,11 @@
       "variants": {
         "technical": {
           "revision": "1",
-          "implementationHash": "sha256:309c353910d67a8179c5883da51faefb8a099a24fe2ec9ebbd02041ebe7c7d59"
+          "implementationHash": "sha256:ecc1e5895aa7a0626582ccd0fe9eeafceeaef2c3151aa97cdc0b27706afb9165"
         },
         "narrative": {
           "revision": "1",
-          "implementationHash": "sha256:7d4bc69ef4c4c3cd37bfa2dfa0f299393c63b9beddd2a975bda43a9ac1142b62"
+          "implementationHash": "sha256:9abfc8314d728dbddb6efcd0a8c270bb1acfb00b0ec3d58491a3714e945aa06c"
         }
       },
       "allocation": {
