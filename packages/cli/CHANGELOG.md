@@ -1,5 +1,11 @@
 # @facet-smith/cli
 
+## 0.3.1
+
+### Patch Changes
+
+- f05e349: Resolve project `tsconfig.json` path aliases when hashing variants, and limit hashes to each component declaration plus its transitive local dependencies so unrelated file edits do not create drift while helper changes remain detectable.
+
 ## 0.3.0
 
 ### Minor Changes
